@@ -22,14 +22,13 @@ namespace AIHubTaskDashboard.Services
 
         public async Task CreateTaskAsync(TaskModel task)
         {
-            // ✅ Sửa: bỏ "api/"
             var res = await _http.PostAsJsonAsync("Tasks", task);
             res.EnsureSuccessStatusCode();
         }
 
         public async Task DeleteTaskAsync(int id)
         {
-            // ✅ Sửa: bỏ "api/"
+
             var res = await _http.DeleteAsync($"Tasks/{id}");
             res.EnsureSuccessStatusCode();
         }
