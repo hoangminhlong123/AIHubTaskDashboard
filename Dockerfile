@@ -4,15 +4,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY AIHubTaskTracker/AIHubTaskTracker.csproj AIHubTaskTracker/
+COPY AIHubTaskDashboard/AIHubTaskDashboard.csproj ./AIHubTaskDashboard/
 
-# Restore dependencies
-RUN dotnet restore "AIHubTaskTracker/AIHubTaskTracker.csproj"
+RUN dotnet restore "./AIHubTaskDashboard/AIHubTaskDashboard.csproj"
 
-COPY . .
+# Copy toàn bộ source
+COPY AIHubTaskDashboard/. ./AIHubTaskDashboard/
 
-# Build và publish ra thư mục /app/publish
-WORKDIR /src/AIHubTaskTracker
+WORKDIR /src/AIHubTaskDashboard
 RUN dotnet publish -c Release -o /app/publish
 
 # =============================
@@ -21,4 +20,4 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "AIHubTaskTracker.dll"]
+ENTRYPOINT ["dotnet", "AIHubTaskDashboard.dll"]
