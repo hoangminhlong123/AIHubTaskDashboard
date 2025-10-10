@@ -1,0 +1,7 @@
+D:\AIHubTaskDashboard\AIHubTaskDashboard\publish\AIHubTaskDashboard.exe
+D:\AIHubTaskDashboard\AIHubTaskDashboard\publish\appsettings.Development.json
+D:\AIHubTaskDashboard\AIHubTaskDashboard\publish\appsettings.json
+D:\AIHubTaskDashboard\AIHubTaskDashboard\publish\AIHubTaskDashboard.dll
+D:\AIHubTaskDashboard\AIHubTaskDashboard\publish\AIHubTaskDashboard.deps.json
+D:\AIHubTaskDashboard\AIHubTaskDashboard\publish\AIHubTaskDashboard.runtimeconfig.json
+D:\AIHubTaskDashboard\AIHubTaskDashboard\publish\AIHubTaskDashboard.pdb
