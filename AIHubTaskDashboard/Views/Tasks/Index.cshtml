@@ -1,0 +1,151 @@
+﻿@model List<AIHubTaskDashboard.Models.TaskModel>
+@{
+    ViewData["Title"] = "Tasks Dashboard";
+}
+
+<main class="main-container">
+    <section class="list-section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>📋 Danh sách Task</h2>
+            <button class="btn btn-primary" id="btnOpenModal">➕ Thêm Task</button>
+        </div>
+
+        <table class="task-table table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Thành viên</th>
+                    <th>Tiêu đề</th>
+                    <th>Trạng thái</th>
+                    <th>Hạn chót</th>
+                    <th>Ngày tạo</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td>@t.Id</td>
+                        <td>@t.MemberName</td>
+                        <td>@t.TaskTitle</td>
+                        <td>@t.Status</td>
+                        <td>@t.Deadline.ToString("dd/MM/yyyy")</td>
+                        <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <form asp-action="Delete" method="post" id="deleteForm-@t.Id">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@t.Id, '@t.TaskTitle')">
+                                    Xoá
+                                </button>
+                            </form>
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<!-- === Modal thêm task === -->
+<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background:#141414; color:#f2f2f2; border:1px solid #f5c518;">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Thêm Task Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label>Tên thành viên</label>
+                        <input name="MemberName" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Tiêu đề Task</label>
+                        <input name="TaskTitle" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Trạng thái</label>
+                        <select name="Status" class="form-control" required>
+                            <option value="Pending">⏳ Pending</option>
+                            <option value="In Progress">🚧 In Progress</option>
+                            <option value="Completed">✅ Completed</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Hạn chót</label>
+                        <input type="date" name="Deadline" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Ngày tạo</label>
+                        <input type="datetime-local" name="CreatedAt" class="form-control"
+                               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Tạo Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal xác nhận xoá -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xác nhận xoá Task</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xoá task <strong id="taskNameToDelete"></strong> không?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xoá</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let deleteTaskId = null;
+
+        // mở modal thêm task
+        document.addEventListener("DOMContentLoaded", function () {
+            const addModal = new bootstrap.Modal(document.getElementById('taskModal'));
+            document.getElementById('btnOpenModal').addEventListener('click', () => addModal.show());
+        });
+
+        //  Hiển thị modal xác nhận xoá
+        function showDeleteModal(taskId, taskTitle) {
+            deleteTaskId = taskId;
+            document.getElementById("taskNameToDelete").textContent = taskTitle;
+            const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
+            modal.show();
+        }
+
+        // Khi xác nhận xoá 
+        document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
+            if (deleteTaskId !== null) {
+                const form = document.getElementById(`deleteForm-${deleteTaskId}`);
+                if (form) {
+                    form.submit(); 
+                } else {
+                    console.error("Không tìm thấy form xoá cho ID:", deleteTaskId);
+                }
+                deleteTaskId = null;
+            }
+        });
+    </script>
+}
+
+
