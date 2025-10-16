@@ -1,151 +1,143 @@
-﻿@model List<AIHubTaskDashboard.Models.TaskModel>
+﻿@using System.Text.Json
+@model System.Text.Json.JsonElement
+
 @{
-    ViewData["Title"] = "Tasks Dashboard";
+    var tasks = Model.ValueKind == JsonValueKind.Array ? Model.EnumerateArray() : Enumerable.Empty<JsonElement>();
+    ViewBag.Title = "Quản lý Công việc";
+
+    var currentStatus = Context.Request.Query["status"].FirstOrDefault();
+    var currentAssigneeId = Context.Request.Query["assignee_id"].FirstOrDefault();
+    var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
+    var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+    var userMap = users.ToDictionary(
+        u => u.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0,
+        u => u.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User"
+    );
 }
 
-<main class="main-container">
-    <section class="list-section">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>📋 Danh sách Task</h2>
-            <button class="btn btn-primary" id="btnOpenModal">➕ Thêm Task</button>
-        </div>
+<h2 class="fw-bold mb-4">@ViewBag.Title</h2>
 
-        <table class="task-table table table-striped mt-3">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Thành viên</th>
-                    <th>Tiêu đề</th>
-                    <th>Trạng thái</th>
-                    <th>Hạn chót</th>
-                    <th>Ngày tạo</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in Model)
-                {
-                    <tr>
-                        <td>@t.Id</td>
-                        <td>@t.MemberName</td>
-                        <td>@t.TaskTitle</td>
-                        <td>@t.Status</td>
-                        <td>@t.Deadline.ToString("dd/MM/yyyy")</td>
-                        <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
-                            <form asp-action="Delete" method="post" id="deleteForm-@t.Id">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@t.Id" />
-                                <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@t.Id, '@t.TaskTitle')">
-                                    Xoá
-                                </button>
-                            </form>
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3"><i class="bi bi-filter me-2"></i> Bộ lọc Tasks</h5>
+        <form method="get" asp-action="Index" class="row g-3 align-items-end">
 
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </section>
-</main>
-
-<!-- === Modal thêm task === -->
-<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content" style="background:#141414; color:#f2f2f2; border:1px solid #f5c518;">
-            <div class="modal-header">
-                <h5 class="modal-title">➕ Thêm Task Mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            <div class="col-md-4">
+                <label for="statusFilter" class="form-label">Trạng thái</label>
+                <select name="status" id="statusFilter" class="form-select">
+                    <option value="">-- Tất cả --</option>
+                    @{
+                        var statuses = new List<string> { "To Do", "In Progress", "Completed" };
+                    }
+                    @foreach (var s in statuses)
+                    {
+                        <option value="@s" selected="@(currentStatus == s)">@s</option>
+                    }
+                </select>
             </div>
-            <div class="modal-body">
-                <form asp-action="Create" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="mb-3">
-                        <label>Tên thành viên</label>
-                        <input name="MemberName" class="form-control" required />
-                    </div>
 
-                    <div class="mb-3">
-                        <label>Tiêu đề Task</label>
-                        <input name="TaskTitle" class="form-control" required />
-                    </div>
+            <div class="col-md-4">
+                <label for="assigneeFilter" class="form-label">Người được giao</label>
+                <select name="assignee_id" id="assigneeFilter" class="form-select">
+                    <option value="">-- Tất cả --</option>
+                    @foreach (var user in users)
+                    {
+                        var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User";
 
-                    <div class="mb-3">
-                        <label>Trạng thái</label>
-                        <select name="Status" class="form-control" required>
-                            <option value="Pending">⏳ Pending</option>
-                            <option value="In Progress">🚧 In Progress</option>
-                            <option value="Completed">✅ Completed</option>
-                        </select>
-                    </div>
+                        if (userId == 0) continue;
 
-                    <div class="mb-3">
-                        <label>Hạn chót</label>
-                        <input type="date" name="Deadline" class="form-control" required />
-                    </div>
+                        var isUserSelected = currentAssigneeId == userId.ToString();
 
-                    <div class="mb-3">
-                        <label>Ngày tạo</label>
-                        <input type="datetime-local" name="CreatedAt" class="form-control"
-                               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
-                    </div>
+                        <option value="@userId" selected="@isUserSelected">@fullName</option>
+                    }
+                </select>
+            </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Tạo Task</button>
-                </form>
+            <div class="col-md-4 d-flex">
+                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-search"></i> Lọc</button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i> Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Danh sách Task</h3>
+    <a class="btn btn-success btn-lg" href="@Url.Action("Create", "Tasks")">
+        <i class="bi bi-plus-circle me-2"></i> Thêm Task
+    </a>
+</div>
+@if (!tasks.Any())
+{
+    <div class="alert alert-info py-3 shadow-sm">
+        <i class="bi bi-info-circle me-2"></i> Hiện tại chưa có công việc nào phù hợp với bộ lọc.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 task-list-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 35%;">Tiêu đề</th>
+                            <th style="width: 10%;">Trạng thái</th>
+                            <th style="width: 15%;">Người giao</th>
+                            <th style="width: 10%;">Tiến độ</th>
+                            <th style="width: 25%;" class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var task in tasks)
+                        {
+                            var taskId = task.TryGetProperty("task_id", out var idElement) ? idElement.GetInt32() : 0;
+                            var title = task.TryGetProperty("title", out var titleElement) ? titleElement.GetString() : "(Không có tiêu đề)";
+                            var status = task.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "Unknown";
+                            var progress = task.TryGetProperty("progress_percentage", out var progressElement) ? progressElement.GetInt32() : 0;
+                            var assignerId = task.TryGetProperty("assigner_id", out var aoid) ? aoid.GetInt32() : 0;
+                            var assignerName = userMap.ContainsKey(assignerId) ? userMap[assignerId] : $"User #{assignerId}";
+
+                            // Hàm helper (cần được định nghĩa trong khối @{...} ở đầu View)
+                            string GetStatusBadgeClass(string s) => s switch { "Completed" => "bg-success", "In Progress" => "bg-warning text-dark", "To Do" => "bg-info", _ => "bg-secondary" };
+                            string GetProgressBarClass(int p) => p switch { int n when n == 100 => "bg-success", int n when n >= 50 => "bg-primary", _ => "bg-info" };
+
+
+                            @if (taskId == 0) continue;
+
+                            <tr>
+                                <td>@taskId</td>
+                                <td class="fw-semibold">@title</td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(status) p-2">@status</span>
+                                </td>
+                                <td>
+                                    @assignerName
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @GetProgressBarClass(progress)" style="width: @(progress)%">
+                                            @(progress)%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <a class="btn btn-sm btn-outline-primary me-2" href="@Url.Action("Edit", "Tasks", new { id = taskId })" title="Sửa Task">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    <form method="post" asp-action="Delete" asp-controller="Tasks" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa task: @title không?');">
+                                        <input type="hidden" name="id" value="@taskId" />
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa Task">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-</div>
-<!-- Modal xác nhận xoá -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-3 shadow">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Xác nhận xoá Task</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
-            </div>
-            <div class="modal-body">
-                <p>Bạn có chắc chắn muốn xoá task <strong id="taskNameToDelete"></strong> không?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xoá</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        let deleteTaskId = null;
-
-        // mở modal thêm task
-        document.addEventListener("DOMContentLoaded", function () {
-            const addModal = new bootstrap.Modal(document.getElementById('taskModal'));
-            document.getElementById('btnOpenModal').addEventListener('click', () => addModal.show());
-        });
-
-        //  Hiển thị modal xác nhận xoá
-        function showDeleteModal(taskId, taskTitle) {
-            deleteTaskId = taskId;
-            document.getElementById("taskNameToDelete").textContent = taskTitle;
-            const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
-            modal.show();
-        }
-
-        // Khi xác nhận xoá 
-        document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
-            if (deleteTaskId !== null) {
-                const form = document.getElementById(`deleteForm-${deleteTaskId}`);
-                if (form) {
-                    form.submit(); 
-                } else {
-                    console.error("Không tìm thấy form xoá cho ID:", deleteTaskId);
-                }
-                deleteTaskId = null;
-            }
-        });
-    </script>
 }
-
-

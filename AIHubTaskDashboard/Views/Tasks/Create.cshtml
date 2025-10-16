@@ -1,0 +1,113 @@
+﻿@using System.Text.Json
+@model System.Text.Json.JsonElement
+
+@{
+    ViewBag.Title = "Tạo Task Mới";
+
+    var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
+    var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+    var defaultStatus = "To Do";
+    var defaultDeadline = DateTime.Now.AddDays(7).ToString("yyyy-MM-dd");
+}
+
+<h2 class="fw-bold mb-4">@ViewBag.Title</h2>
+
+<div class="card shadow-sm profile-card">
+    <div class="card-body p-4 p-md-5">
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger mb-4">@TempData["Error"]</div>
+        }
+
+        <form asp-action="Create" method="post" class="row g-4">
+
+            <div class="col-12">
+                <label for="titleInput" class="form-label fw-semibold">Tiêu đề Task <span class="text-danger">*</span></label>
+                <input type="text" id="titleInput" name="title" class="form-control" required placeholder="Ví dụ: Tối ưu hóa API cho Mobile App" />
+            </div>
+
+            <div class="col-12">
+                <label for="descriptionInput" class="form-label fw-semibold">Mô tả chi tiết</label>
+                <textarea id="descriptionInput" name="description" class="form-control" rows="3" placeholder="Mô tả cụ thể công việc cần làm..."></textarea>
+            </div>
+
+            <div class="col-md-6">
+                <label for="deadlineInput" class="form-label fw-semibold">Deadline</label>
+                <input type="date" id="deadlineInput" name="deadline" class="form-control" value="@defaultDeadline" />
+            </div>
+
+            <div class="col-md-6">
+                <label for="expectedOutputInput" class="form-label fw-semibold">Đầu ra mong đợi (Expected Output)</label>
+                <input type="text" id="expectedOutputInput" name="expected_output" class="form-control" placeholder="Tóm tắt kết quả cuối cùng..." />
+            </div>
+
+            <div class="col-md-4">
+                <label for="statusInput" class="form-label fw-semibold">Trạng thái</label>
+                <select id="statusInput" name="status" class="form-select">
+                    @{
+                        var taskStatuses = new List<string> { "To Do", "In Progress", "Completed" };
+                    }
+                    @foreach (var s in taskStatuses)
+                    {
+                        <option value="@s" selected="@(defaultStatus == s)">@s</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="assigneeInput" class="form-label fw-semibold">Người được giao <span class="text-danger">*</span></label>
+                <select id="assigneeInput" name="assignee_id" class="form-select" required>
+                    <option value="">-- Chọn người giao --</option>
+                    @foreach (var user in users)
+                    {
+                        var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User";
+
+                        if (userId == 0) continue;
+
+                        <option value="@userId">@fullName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="progressInput" class="form-label fw-semibold">Tiến độ (%)</label>
+                <input type="number" id="progressInput" name="progress_percentage" class="form-control" min="0" max="100" value="0" required />
+            </div>
+
+            <div class="col-md-8">
+                <label for="collaboratorsInput" class="form-label fw-semibold">Cộng tác viên (Collaborators)</label>
+                <select id="collaboratorsInput" name="collaborators" class="form-select" multiple>
+                    {{-- SỬ DỤNG DATA ĐỘNG CHO COLLABORATORS (Lặp lại Users) --}}
+                    @foreach (var user in users)
+                    {
+                        var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User";
+
+                        if (userId == 0) continue;
+
+                        <option value="@userId">@fullName</option>
+                    }
+                </select>
+                <small class="text-muted">Giữ Ctrl hoặc Command để chọn nhiều người.</small>
+            </div>
+
+            <div class="col-md-4">
+                <label for="notionLinkInput" class="form-label fw-semibold">Link Notion/Tài liệu</label>
+                <input type="url" id="notionLinkInput" name="notion_link" class="form-control" placeholder="https://notion.so/..." />
+            </div>
+
+
+            <div class="col-12 mt-5">
+                <button type="submit" class="btn btn-success btn-lg me-3">
+                    <i class="bi bi-save me-2"></i> Tạo Task
+                </button>
+                <a href="@Url.Action("Index", "Tasks")" class="btn btn-outline-secondary btn-lg">
+                    Hủy
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>

@@ -1,242 +1,147 @@
-﻿
-:root {
-    --black: #0a0a0a;
-    --dark: #1a1a1a;
-    --accent: #ffd700;
-    --accent-glow: rgba(245, 197, 24, 0.2);
-    --muted: #bfbf6f;
-    --text-light: #f2f2f2;
-}
-
+﻿/* Thiết lập cơ bản */
 html, body {
-    margin: 0;
-    padding: 0;
     height: 100%;
 }
 
 body {
-    font-family: "Poppins", system-ui, Arial, sans-serif;
-    background: var(--black);
-    color: var(--text-light);
+    overflow-x: hidden; /* Ngăn cuộn ngang */
+    background-color: #f8f9fa; /* Nền Dashboard nhẹ */
+}
+
+/* -------------------- Cấu trúc Sidebar & Main Content -------------------- */
+
+#wrapper {
+    /* Quan trọng: Buộc wrapper chiếm toàn bộ chiều cao và sử dụng Flex */
     display: flex;
-    flex-direction: column;
     min-height: 100vh;
 }
 
-/* === HEADER === */
-.header {
-    background: var(--dark);
-    border-bottom: 2px solid var(--accent);
-    color: var(--accent);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 32px;
-    box-shadow: 0 3px 8px rgba(255, 215, 0, 0.3);
-    font-family: 'Segoe UI', Tahoma, sans-serif;
+#sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -15rem; /* Ẩn mặc định trên mobile */
+    width: 15rem;
+    transition: margin 0.3s ease-in-out;
+    background-color: #212529 !important; /* Màu tối đậm */
 }
 
-.logo {
-    font-weight: bold;
-    font-size: 1.5rem;
-    color: var(--accent);
-}
-
-.user-info {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--accent);
-}
-
-/* === MAIN === */
-.main-container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 40px 20px;
-    min-height: calc(100vh - 140px);
-    background: linear-gradient(180deg, #fffefc, #fff7df);
-}
-/* ==== DANH SÁCH TASK BOX ==== */
-.list-section {
-    background: #111;
-    border: 1px solid #f5c518;
-    border-radius: 16px;
-    padding: 25px 30px;
-    width: 90%;
-    max-width: 900px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-    color: #f2f2f2;
-}
-
-    .list-section h2 {
-        color: #f5c518;
+    #sidebar-wrapper .sidebar-heading {
+        padding: 1rem 1.25rem;
         font-size: 1.4rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        color: #00bcd4;
+        font-weight: 700;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-.btn-primary {
-    background-color: #0d6efd;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 500;
-    transition: all 0.2s;
+    #sidebar-wrapper .list-group-item {
+        border: none;
+        padding: 0.8rem 1.25rem;
+        color: #adb5bd; /* Màu chữ mặc định */
+    }
+
+        #sidebar-wrapper .list-group-item:hover,
+        #sidebar-wrapper .list-group-item.active {
+            background-color: #343a40 !important;
+            color: #ffffff !important;
+        }
+
+#page-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Cho phép nội dung chính chiếm hết phần còn lại */
+    min-width: 0; /* Cho phép nội dung co lại nếu cần */
 }
 
-    .btn-primary:hover {
-        background-color: #0b5ed7;
-    }
-
-.btn-delete {
-    background-color: #dc3545;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 10px;
-    color: #fff;
-    font-size: 0.9rem;
-    transition: 0.2s;
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: 0;
 }
 
-    .btn-delete:hover {
-        background-color: #bb2d3b;
-    }
-
-.task-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    background: #1b1b1b;
-    border-radius: 10px;
-    overflow: hidden;
-    font-size: 0.95rem;
-}
-
-    .task-table th {
-        background: #f5c518;
-        color: #111;
-        padding: 10px 12px;
-        text-align: left;
-        font-weight: 600;
-    }
-
-    .task-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #333;
-        color: #eee;
-    }
-
-    .task-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .task-table tr:hover {
-        background-color: #222;
-        transition: 0.2s;
-    }
-
-.create-section, .list-section,
-.create-area, .list-area {
-    background: var(--dark);
-    border: 1px solid var(--accent-glow);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 6px 26px rgba(245,197,24,0.08);
-}
-
-h2 {
-    color: var(--accent);
-    margin-top: 0;
-    margin-bottom: 1rem;
-    letter-spacing: 0.5px;
-}
-input, select, textarea {
-    width: 100%;
-    padding: 10px 12px;
-    margin: 8px 0;
-    border-radius: 6px;
-    border: 1px solid var(--accent-glow);
-    background: #0d0d0d;
-    color: var(--text-light);
-    font-size: 0.95rem;
-}
-
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 6px var(--accent-glow);
-    }
-.btn-primary {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 6px;
-    cursor: pointer;
+.task-card .card-header {
     font-weight: 600;
-    transition: 0.2s;
 }
 
-    .btn-primary:hover {
-        background: #ffe066;
-        transform: scale(1.03);
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0;
     }
 
-.btn-delete {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.2s;
+    #page-content-wrapper {
+        min-width: 0;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: -15rem; 
+    }
 }
 
-    .btn-delete:hover {
-        background: var(--accent);
-        color: #000;
-        transform: scale(1.05);
-    }
+/* -------------------- Trang Đăng nhập (Login Page) -------------------- */
 
-.task-table {
+.login-page-wrapper {
+    /* Đảm bảo div bọc ngoài chiếm toàn bộ không gian còn lại */
+    min-height: 100vh;
+    display: flex;
+    align-items: center; /* Căn giữa theo chiều dọc */
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    background-color: #f0f2f5; /* Nền xám nhạt */
+    padding: 20px;
+}
+
+.login-card {
+    /* Kích thước tối đa của thẻ đăng nhập */
+    max-width: 450px;
     width: 100%;
-    border-collapse: collapse;
-    color: var(--text-light);
+    border-radius: 12px;
 }
 
-    .task-table th, .task-table td {
-        padding: 12px 10px;
-        border-bottom: 1px solid rgba(245,197,24,0.06);
-        text-align: left;
-    }
-
-    .task-table th {
-        color: var(--accent);
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-    }
-
-    .task-table tbody tr:hover {
-        background: rgba(245,197,24,0.05);
-        transition: 0.2s;
-    }
-
-.footer {
-    background: var(--dark);
-    border-top: 2px solid var(--accent);
-    text-align: center;
-    padding: 16px;
-    color: var(--text-light);
-    font-size: 0.9rem;
-    letter-spacing: 0.3px;
-    margin-top: auto;
+/* Hiệu chỉnh cho input để trông lớn và rõ ràng hơn */
+.form-control-lg {
+    border-radius: 8px;
 }
-@media (max-width: 900px) {
-    .main-container {
-        grid-template-columns: 1fr;
+
+/* Đảm bảo trang đăng nhập hiển thị đúng trên mobile */
+@media (max-width: 576px) {
+    .login-card {
+        max-width: 100%; /* Chiếm toàn bộ chiều rộng trên mobile */
     }
+}
+/* -------------------- Trang Hồ sơ (Profile Page) -------------------- */
+
+.profile-container {
+    max-width: 900px; /* Giới hạn chiều rộng cho nội dung chính */
+    margin: 0 auto; /* Căn giữa nội dung */
+}
+
+.profile-card {
+    border-radius: 10px;
+}
+
+/* Tùy chỉnh input readonly để trông khác biệt */
+input[readonly].form-control {
+    background-color: #e9ecef;
+    opacity: 1;
+    cursor: default;
+}
+
+/* Thẻ cảnh báo với icon đẹp hơn */
+.alert i {
+    font-size: 1.1em;
+}
+/* -------------------- Trang Đăng ký (Register Page) -------------------- */
+
+.register-card {
+    /* Đặt chiều rộng lớn hơn một chút so với Login Card (450px) */
+    max-width: 500px;
+    width: 100%;
+    border-radius: 12px;
+}
+/* -------------------- Trang Danh sách Task -------------------- */
+
+/* Bọc bảng trong Card để có shadow và border đẹp */
+.task-list-table {
+    border: none !important;
+}
+
+/* Đảm bảo table-responsive hoạt động tốt trên mobile */
+.table-responsive {
+    overflow-x: auto;
 }

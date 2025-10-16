@@ -1,0 +1,79 @@
+﻿@model System.Text.Json.JsonElement
+
+@{
+    ViewBag.Title = "Hồ sơ cá nhân";
+}
+
+<div class="profile-container">
+
+    <h2 class="mb-4 fw-bold text-primary">Hồ sơ Cá nhân</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm profile-card">
+        <div class="card-body p-4 p-md-5">
+
+            <div class="d-flex align-items-center mb-5 border-bottom pb-3">
+                <i class="bi bi-person-circle display-4 text-muted me-4"></i>
+                <div>
+                    <h3 class="card-title mb-1">@Model.GetProperty("full_name").GetString()</h3>
+                    <p class="text-muted mb-0">@Model.GetProperty("role").GetString() (@Model.GetProperty("position").GetString())</p>
+                </div>
+            </div>
+
+            <form asp-action="UpdateProfile" method="post">
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+                        <label for="fullNameInput" class="form-label fw-semibold">Họ tên</label>
+                        <input id="fullNameInput" name="full_name" class="form-control"
+                               value="@Model.GetProperty("full_name").GetString()" required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="emailInput" class="form-label fw-semibold">Email</label>
+                        <input id="emailInput" name="email" class="form-control"
+                               value="@Model.GetProperty("email").GetString()" type="email" required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="roleInput" class="form-label fw-semibold">Vai trò</label>
+                        <input id="roleInput" class="form-control"
+                               value="@Model.GetProperty("role").GetString()" readonly />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="positionInput" class="form-label fw-semibold">Chức vụ</label>
+                        <input id="positionInput" class="form-control"
+                               value="@Model.GetProperty("position").GetString()" readonly />
+                    </div>
+
+                    <div class="col-12 mt-4 pt-3 border-top">
+                        <p class="text-muted small mb-0">
+                            Lần cập nhật cuối:
+                            <span class="fw-semibold">@Model.GetProperty("updated_at").GetDateTime().ToString("dd/MM/yyyy HH:mm")</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-floppy-fill me-2"></i> Lưu thay đổi</button>
+                    <a href="/Account/ChangePassword" class="btn btn-outline-secondary ms-3 btn-lg">Đổi mật khẩu</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
