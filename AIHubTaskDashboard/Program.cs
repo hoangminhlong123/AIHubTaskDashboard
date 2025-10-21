@@ -1,8 +1,12 @@
+using AIHubTaskDashboard.Hubs;
 using AIHubTaskDashboard.Services;
 using Microsoft.EntityFrameworkCore;
+using AIHubTaskDashboard.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
+
 
 builder.Services.AddHttpClient<ApiClientService>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -35,5 +39,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-
+app.MapHub<TaskHub>("/taskHub");
 app.Run();

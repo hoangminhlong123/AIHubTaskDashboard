@@ -17,6 +17,10 @@
       "PackagePath": "staticwebassets\\js\\site.js"
     },
     {
+      "Id": "D:\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\js\\task-realtime.js",
+      "PackagePath": "staticwebassets\\js\\task-realtime.js"
+    },
+    {
       "Id": "D:\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\lib\\bootstrap\\LICENSE",
       "PackagePath": "staticwebassets\\lib\\bootstrap"
     },

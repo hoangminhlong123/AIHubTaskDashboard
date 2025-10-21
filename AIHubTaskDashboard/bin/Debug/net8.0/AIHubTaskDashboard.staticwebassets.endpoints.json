@@ -331,6 +331,88 @@
       ]
     },
     {
+      "Route": "js/task-realtime.js",
+      "AssetFile": "js/task-realtime.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1864"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"v7V48cA/pRX1CN8/brtUJD0MRbxj99u8MZYWO7simEY=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 21 Oct 2025 02:44:30 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-v7V48cA/pRX1CN8/brtUJD0MRbxj99u8MZYWO7simEY="
+        }
+      ]
+    },
+    {
+      "Route": "js/task-realtime.p2es48nono.js",
+      "AssetFile": "js/task-realtime.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1864"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"v7V48cA/pRX1CN8/brtUJD0MRbxj99u8MZYWO7simEY=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 21 Oct 2025 02:44:30 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "p2es48nono"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-v7V48cA/pRX1CN8/brtUJD0MRbxj99u8MZYWO7simEY="
+        },
+        {
+          "Name": "label",
+          "Value": "js/task-realtime.js"
+        }
+      ]
+    },
+    {
       "Route": "lib/bootstrap/LICENSE",
       "AssetFile": "lib/bootstrap/LICENSE",
       "Selectors": [],
