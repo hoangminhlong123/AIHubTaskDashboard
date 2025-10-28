@@ -16,50 +16,25 @@ namespace AIHubTaskDashboard.Controllers
 
         public async Task<IActionResult> Index(string? status, int? assignee_id)
         {
-            // Lấy ID người dùng hiện tại từ Session (Giả định đã đăng nhập thành công)
-            string currentUserIdString = HttpContext.Session.GetString("id");
-            int currentUserId = 0;
-            if (!string.IsNullOrEmpty(currentUserIdString))
-            {
-                int.TryParse(currentUserIdString, out currentUserId);
-            }
-
-            // Kiểm tra đăng nhập (Nếu ID là 0, chuyển hướng về Login)
-            if (currentUserId == 0)
-            {
-                // Giả định bạn có AccountController
-                return RedirectToAction("Login", "Account");
-            }
-
             try
             {
                 string endpoint = "api/v1/tasks";
                 var query = new List<string>();
 
-                // SỬA LỖI: Chỉ lọc theo assignee_id một lần
-                bool isAssigneeFilterSet = false;
-
+                // Chỉ lọc theo assignee_id nếu người dùng chọn filter
                 if (assignee_id.HasValue && assignee_id.Value != 0)
                 {
-                    // Lọc theo assignee_id nếu người dùng tự chọn filter hợp lệ
                     query.Add($"assignee_id={assignee_id.Value}");
-                    isAssigneeFilterSet = true;
-                }
-                else if (currentUserId != 0 && !isAssigneeFilterSet)
-                {
-                    // MẶC ĐỊNH: Lọc theo Task được giao cho người dùng hiện tại
-                    query.Add($"assignee_id={currentUserId}");
-                    isAssigneeFilterSet = true;
                 }
 
-                // Lọc theo Status (chỉ thêm nếu có giá trị)
+                // Lọc theo status nếu có
                 if (!string.IsNullOrEmpty(status))
                 {
                     query.Add($"status={status}");
                 }
 
-                // Tạo Endpoint hoàn chỉnh
-                if (query.Count > 0) endpoint += "?" + string.Join("&", query);
+                if (query.Count > 0)
+                    endpoint += "?" + string.Join("&", query);
 
                 var res = await _api.GetAsync(endpoint);
 
@@ -71,12 +46,11 @@ namespace AIHubTaskDashboard.Controllers
                 else
                 {
                     tasks = JsonDocument.Parse(res).RootElement;
-                    // Xử lý trường hợp API trả về object đơn lẻ thay vì array (ít xảy ra nhưng an toàn)
                     if (tasks.ValueKind != JsonValueKind.Array)
                         tasks = JsonDocument.Parse($"[{res}]").RootElement;
                 }
 
-                // Thêm Users vào ViewBag để View có dữ liệu người dùng động
+                // Lấy danh sách Users cho view
                 try
                 {
                     var usersRes = await _api.GetAsync("api/v1/users");
@@ -84,7 +58,6 @@ namespace AIHubTaskDashboard.Controllers
                 }
                 catch
                 {
-                    // Đảm bảo View không bị lỗi nếu không tải được Users
                     ViewBag.Users = JsonDocument.Parse("[]").RootElement;
                 }
 
@@ -92,20 +65,33 @@ namespace AIHubTaskDashboard.Controllers
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi vào hệ thống (nếu có ILogger)
-                // logger.LogError(ex, "Lỗi khi tải danh sách Task.");
-
                 var emptyJson = JsonDocument.Parse("[]").RootElement;
                 return View(emptyJson);
             }
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var emptyJson = JsonDocument.Parse("{}").RootElement; 
+            JsonElement users;
+
+            try
+            {
+                var usersRes = await _api.GetAsync("api/v1/members");
+                users = JsonDocument.Parse(usersRes).RootElement;
+            }
+            catch
+            {
+                users = JsonDocument.Parse("[]").RootElement;
+            }
+
+            ViewBag.Users = users;
+
+            var emptyJson = JsonDocument.Parse("{}").RootElement;
             return View(emptyJson);
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> Create(string title, string description, string status, int progress_percentage, int assignee_id)

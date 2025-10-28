@@ -55,21 +55,20 @@
                 </select>
             </div>
 
-            <div class="col-md-4">
-                <label for="assigneeInput" class="form-label fw-semibold">Người được giao <span class="text-danger">*</span></label>
-                <select id="assigneeInput" name="assignee_id" class="form-select" required>
-                    <option value="">-- Chọn người giao --</option>
-                    @foreach (var user in users)
-                    {
-                        var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
-                        var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User";
+            <select id="assigneeInput" name="assignee_id" class="form-select" required>
+                <option value="">-- Chọn người giao --</option>
+                @foreach (var user in users)
+                {
+                    var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                    var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
 
-                        if (userId == 0) continue;
+                    if (userId == 0) continue;
 
-                        <option value="@userId">@fullName</option>
-                    }
-                </select>
-            </div>
+                    <option value="@userId">@fullName</option>
+                }
+
+            </select>
+
 
             <div class="col-md-4">
                 <label for="progressInput" class="form-label fw-semibold">Tiến độ (%)</label>
@@ -82,13 +81,14 @@
                     {{-- SỬ DỤNG DATA ĐỘNG CHO COLLABORATORS (Lặp lại Users) --}}
                     @foreach (var user in users)
                     {
-                        var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
-                        var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User";
+                        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
 
                         if (userId == 0) continue;
 
                         <option value="@userId">@fullName</option>
                     }
+
                 </select>
                 <small class="text-muted">Giữ Ctrl hoặc Command để chọn nhiều người.</small>
             </div>
