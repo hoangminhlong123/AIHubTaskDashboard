@@ -60,9 +60,7 @@ namespace AIHubTaskDashboard.Controllers
 			}
 		}
 
-		/// <summary>
-		/// Test endpoint để verify webhook đang hoạt động
-		/// </summary>
+		
 		[HttpGet("test")]
 		public IActionResult Test()
 		{
