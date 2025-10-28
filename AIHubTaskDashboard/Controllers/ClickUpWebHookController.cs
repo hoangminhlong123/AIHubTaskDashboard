@@ -71,9 +71,7 @@ namespace AIHubTaskDashboard.Controllers
 			});
 		}
 
-		/// <summary>
-		/// Manual sync endpoint - trigger sync từ ClickUp
-		/// </summary>
+		
 		[HttpPost("sync")]
 		public async Task<IActionResult> ManualSync([FromQuery] string listId)
 		{
