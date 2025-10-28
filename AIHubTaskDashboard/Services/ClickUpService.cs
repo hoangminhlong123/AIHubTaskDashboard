@@ -13,13 +13,18 @@ namespace AIHubTaskDashboard.Services
 		private readonly string _token;
 		private readonly string _teamId;
 		private readonly ILogger<ClickUpService> _logger;
+		private readonly ApiClientService _apiClient; // ✅ THÊM
 
-		public ClickUpService(IConfiguration config, ILogger<ClickUpService> logger)
+		public ClickUpService(
+			IConfiguration config,
+			ILogger<ClickUpService> logger,
+			ApiClientService apiClient) // ✅ THÊM
 		{
 			_httpClient = new HttpClient();
 			_token = config["ClickUpSettings:Token"];
 			_teamId = config["ClickUpSettings:TeamId"];
 			_logger = logger;
+			_apiClient = apiClient; // ✅ THÊM
 
 			_httpClient.BaseAddress = new Uri(config["ClickUpSettings:ApiBaseUrl"]);
 			_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_token);
@@ -91,7 +96,7 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		// =============================
-		// 3️⃣ Task Created
+		// 3️⃣ Task Created - ✅ FIXED
 		// =============================
 		private async Task HandleTaskCreated(JsonElement payload)
 		{
@@ -108,22 +113,45 @@ namespace AIHubTaskDashboard.Services
 				var status = GetNestedPropertySafe(task, "status", "status");
 				var priority = GetNestedPropertySafe(task, "priority", "priority");
 				var dueDate = GetPropertySafe(task, "due_date");
+				var url = GetPropertySafe(task, "url");
+
+				// Lấy assignees
+				var assignees = new List<string>();
+				if (task.TryGetProperty("assignees", out var assigneesArray))
+				{
+					foreach (var assignee in assigneesArray.EnumerateArray())
+					{
+						var username = GetPropertySafe(assignee, "username");
+						if (!string.IsNullOrEmpty(username))
+							assignees.Add(username);
+					}
+				}
 
 				_logger.LogInformation($"✅ Task created: {taskName} ({taskId}) | Status: {status}");
 
-				// TODO: Save to database
-				// await SaveTaskToDatabase(taskId, taskName, status, priority, dueDate);
+				// ✅ GỌI API ĐỂ SYNC
+				var dto = new
+				{
+					TaskId = taskId,
+					Name = taskName,
+					Status = status,
+					Priority = priority ?? "normal",
+					DueDate = dueDate,
+					Url = url,
+					Assignees = assignees
+				};
+
+				await _apiClient.PostAsync("api/tasks-sync/sync", dto);
+				_logger.LogInformation($"✅ Synced task to backend: {taskId}");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Error in HandleTaskCreated: {ex.Message}");
+				_logger.LogError($"❌ Error in HandleTaskCreated: {ex.Message}\n{ex.StackTrace}");
 			}
-
-			await Task.CompletedTask;
 		}
 
 		// =============================
-		// 4️⃣ Task Updated
+		// 4️⃣ Task Updated - ✅ FIXED
 		// =============================
 		private async Task HandleTaskUpdated(JsonElement payload)
 		{
@@ -138,22 +166,46 @@ namespace AIHubTaskDashboard.Services
 				var taskId = GetPropertySafe(task, "id");
 				var taskName = GetPropertySafe(task, "name");
 				var status = GetNestedPropertySafe(task, "status", "status");
+				var priority = GetNestedPropertySafe(task, "priority", "priority");
+				var dueDate = GetPropertySafe(task, "due_date");
+				var url = GetPropertySafe(task, "url");
+
+				var assignees = new List<string>();
+				if (task.TryGetProperty("assignees", out var assigneesArray))
+				{
+					foreach (var assignee in assigneesArray.EnumerateArray())
+					{
+						var username = GetPropertySafe(assignee, "username");
+						if (!string.IsNullOrEmpty(username))
+							assignees.Add(username);
+					}
+				}
 
 				_logger.LogInformation($"🔄 Task updated: {taskName} ({taskId}) | Status: {status}");
 
-				// TODO: Update database
-				// await UpdateTaskInDatabase(taskId, taskName, status);
+				// ✅ GỌI API ĐỂ SYNC
+				var dto = new
+				{
+					TaskId = taskId,
+					Name = taskName,
+					Status = status,
+					Priority = priority ?? "normal",
+					DueDate = dueDate,
+					Url = url,
+					Assignees = assignees
+				};
+
+				await _apiClient.PostAsync("api/tasks-sync/sync", dto);
+				_logger.LogInformation($"✅ Updated task in backend: {taskId}");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Error in HandleTaskUpdated: {ex.Message}");
+				_logger.LogError($"❌ Error in HandleTaskUpdated: {ex.Message}\n{ex.StackTrace}");
 			}
-
-			await Task.CompletedTask;
 		}
 
 		// =============================
-		// 5️⃣ Task Deleted
+		// 5️⃣ Task Deleted - ✅ FIXED
 		// =============================
 		private async Task HandleTaskDeleted(JsonElement payload)
 		{
@@ -169,19 +221,18 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"🗑️ Task deleted: {taskId}");
 
-				// TODO: Delete from database
-				// await DeleteTaskFromDatabase(taskId);
+				// ✅ GỌI API ĐỂ XÓA
+				await _apiClient.DeleteAsync($"api/tasks-sync/{taskId}");
+				_logger.LogInformation($"✅ Deleted task from backend: {taskId}");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Error in HandleTaskDeleted: {ex.Message}");
+				_logger.LogError($"❌ Error in HandleTaskDeleted: {ex.Message}\n{ex.StackTrace}");
 			}
-
-			await Task.CompletedTask;
 		}
 
 		// =============================
-		// 6️⃣ Task Status Updated
+		// 6️⃣ Task Status Updated - ✅ FIXED
 		// =============================
 		private async Task HandleTaskStatusUpdated(JsonElement payload)
 		{
@@ -198,15 +249,15 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"📊 Task status updated: {taskId} → {newStatus}");
 
-				// TODO: Update status in database
-				// await UpdateTaskStatusInDatabase(taskId, newStatus);
+				// ✅ GỌI API ĐỂ CẬP NHẬT STATUS
+				var dto = new { Status = newStatus };
+				await _apiClient.PatchAsync($"api/tasks-sync/{taskId}/status", dto);
+				_logger.LogInformation($"✅ Updated status in backend: {taskId} → {newStatus}");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Error in HandleTaskStatusUpdated: {ex.Message}");
+				_logger.LogError($"❌ Error in HandleTaskStatusUpdated: {ex.Message}\n{ex.StackTrace}");
 			}
-
-			await Task.CompletedTask;
 		}
 
 		// =============================
@@ -216,6 +267,7 @@ namespace AIHubTaskDashboard.Services
 		{
 			try
 			{
+				// Có thể sync lại toàn bộ task hoặc chỉ update assignee
 				if (!payload.TryGetProperty("task", out var task))
 				{
 					_logger.LogWarning("⚠️ taskAssigneeUpdated: Missing 'task' property");
@@ -223,6 +275,14 @@ namespace AIHubTaskDashboard.Services
 				}
 
 				var taskId = GetPropertySafe(task, "id");
+				_logger.LogInformation($"👤 Task assignee updated: {taskId}");
+
+				// Đơn giản nhất là sync lại toàn bộ task
+				var taskName = GetPropertySafe(task, "name");
+				var status = GetNestedPropertySafe(task, "status", "status");
+				var priority = GetNestedPropertySafe(task, "priority", "priority");
+				var dueDate = GetPropertySafe(task, "due_date");
+				var url = GetPropertySafe(task, "url");
 
 				var assignees = new List<string>();
 				if (task.TryGetProperty("assignees", out var assigneesArray))
@@ -235,17 +295,24 @@ namespace AIHubTaskDashboard.Services
 					}
 				}
 
-				_logger.LogInformation($"👤 Task assignee updated: {taskId} → [{string.Join(", ", assignees)}]");
+				var dto = new
+				{
+					TaskId = taskId,
+					Name = taskName,
+					Status = status,
+					Priority = priority ?? "normal",
+					DueDate = dueDate,
+					Url = url,
+					Assignees = assignees
+				};
 
-				// TODO: Update assignees in database
-				// await UpdateTaskAssigneesInDatabase(taskId, assignees);
+				await _apiClient.PostAsync("api/tasks-sync/sync", dto);
+				_logger.LogInformation($"✅ Synced assignee changes: {taskId}");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Error in HandleTaskAssigneeUpdated: {ex.Message}");
+				_logger.LogError($"❌ Error in HandleTaskAssigneeUpdated: {ex.Message}\n{ex.StackTrace}");
 			}
-
-			await Task.CompletedTask;
 		}
 
 		// =============================
