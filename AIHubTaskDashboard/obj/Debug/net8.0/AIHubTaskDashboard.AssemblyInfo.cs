@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AIHubTaskDashboard")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7f2588d961a96d57ae4d9abca12721ac6d3a31d6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+345e66ae84463f0d1611467df60342cc783b6313")]
 [assembly: System.Reflection.AssemblyProductAttribute("AIHubTaskDashboard")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AIHubTaskDashboard")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

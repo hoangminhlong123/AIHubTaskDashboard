@@ -17,8 +17,7 @@ builder.Services.AddSession(options =>
 });
 
 // ClickUp Service
-builder.Services.AddSingleton<ClickUpService>();
-
+builder.Services.AddScoped<ClickUpService>();
 // Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
