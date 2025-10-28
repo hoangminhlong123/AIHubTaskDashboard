@@ -14,7 +14,7 @@ namespace AIHubTaskDashboard.Services
             _contextAccessor = accessor;
             _httpClient.BaseAddress = new Uri(config["ApiSettings:BaseUrl"]!);
         }
-
+        public Uri BaseAddress => _httpClient.BaseAddress;
         private void AddAuthHeader()
         {
             var token = _contextAccessor.HttpContext?.Session.GetString("AuthToken");
