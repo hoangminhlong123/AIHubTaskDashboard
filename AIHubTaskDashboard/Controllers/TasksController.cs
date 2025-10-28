@@ -183,5 +183,7 @@ namespace AIHubTaskDashboard.Controllers
             await _api.DeleteAsync($"api/v1/tasks/{id}");
             return RedirectToAction("Index");
         }
+
+
     }
 }

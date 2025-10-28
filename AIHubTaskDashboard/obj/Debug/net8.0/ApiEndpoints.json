@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebhookController",
+    "Method": "ManualSync",
+    "RelativePath": "api/clickup/sync",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "listId",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebhookController",
+    "Method": "Test",
+    "RelativePath": "api/clickup/test",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebhookController",
+    "Method": "Webhook",
+    "RelativePath": "api/clickup/webhook",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "payload",
+        "Type": "System.Text.Json.JsonElement",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
