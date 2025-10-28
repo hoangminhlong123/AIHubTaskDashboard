@@ -17,61 +17,61 @@ build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = AIHubTaskDashboard
 build_property.RootNamespace = AIHubTaskDashboard
-build_property.ProjectDir = D:\AIHubTaskDashboard\AIHubTaskDashboard\
+build_property.ProjectDir = E:\AIHUB TASK\DASSHBOARD\AIHubTaskDashboard\AIHubTaskDashboard\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = D:\AIHubTaskDashboard\AIHubTaskDashboard
+build_property.MSBuildProjectDirectory = E:\AIHUB TASK\DASSHBOARD\AIHubTaskDashboard\AIHubTaskDashboard
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Account/Login.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Account/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Account/Profile.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Account/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxQcm9maWxlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Account/Register.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Account/Register.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Home/Index.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Shared/Error.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Shared/_ValidationScriptsPartial.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Tasks/Create.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Tasks/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGFza3NcQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Tasks/Edit.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Tasks/Edit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGFza3NcRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Tasks/Index.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Tasks/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGFza3NcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/_ViewImports.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/_ViewStart.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/AIHubTaskDashboard/AIHubTaskDashboard/Views/Shared/_Layout.cshtml]
+[E:/AIHUB TASK/DASSHBOARD/AIHubTaskDashboard/AIHubTaskDashboard/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-fzkgzq4mfx
