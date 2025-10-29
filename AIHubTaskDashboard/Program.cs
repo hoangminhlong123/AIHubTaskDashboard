@@ -18,6 +18,7 @@ builder.Services.AddSession(options =>
 
 // ClickUp Service
 builder.Services.AddScoped<ClickUpService>();
+builder.Services.AddScoped<ClickUpApiService>();
 // Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
