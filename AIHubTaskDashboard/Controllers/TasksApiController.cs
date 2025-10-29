@@ -27,9 +27,12 @@ namespace AIHubTaskDashboard.Controllers
 		{
 			try
 			{
-				_logger.LogInformation($"📥 Syncing task: {dto.TaskId} - {dto.Name}");
+				_logger.LogInformation($"📥 [SYNC] Starting sync for task: {dto.TaskId} - {dto.Name}");
+				_logger.LogInformation($"📥 [SYNC] Status: {dto.Status}, Priority: {dto.Priority}");
+				_logger.LogInformation($"📥 [SYNC] Assignees: {string.Join(", ", dto.Assignees)}");
 
 				// 🔍 CHECK: Task đã tồn tại chưa?
+				_logger.LogInformation($"🔍 [SYNC] Checking if task exists: clickup_id={dto.TaskId}");
 				var existingTaskJson = await TryGetExistingTask(dto.TaskId);
 
 				var payload = new
@@ -39,13 +42,15 @@ namespace AIHubTaskDashboard.Controllers
 					description = BuildDescription(dto),
 					status = MapClickUpStatus(dto.Status),
 					progress_percentage = CalculateProgress(dto.Status),
-					assignee_id = 1, // TODO: Map ClickUp assignee
-					assigner_id = 1, // System user
+					assignee_id = 1,
+					assigner_id = 1,
 					collaborators = new List<int>(),
 					expected_output = "Auto-synced from ClickUp",
 					deadline = ParseClickUpDate(dto.DueDate),
 					notion_link = dto.Url
 				};
+
+				_logger.LogInformation($"📦 [SYNC] Payload prepared: status={payload.status}, progress={payload.progress_percentage}");
 
 				if (existingTaskJson != null)
 				{
@@ -53,21 +58,24 @@ namespace AIHubTaskDashboard.Controllers
 					var existingTask = JsonDocument.Parse(existingTaskJson).RootElement;
 					var taskId = existingTask.GetProperty("task_id").GetInt32();
 
+					_logger.LogInformation($"🔄 [SYNC] Task exists, updating task_id={taskId}");
 					await _apiClient.PutAsync($"api/v1/tasks/{taskId}", payload);
-					_logger.LogInformation($"✅ Task updated: {dto.TaskId}");
+					_logger.LogInformation($"✅ [SYNC] Task updated successfully: {dto.TaskId}");
 				}
 				else
 				{
 					// CREATE new task
+					_logger.LogInformation($"➕ [SYNC] Task not found, creating new task");
 					await _apiClient.PostAsync("api/v1/tasks", payload);
-					_logger.LogInformation($"✅ Task created: {dto.TaskId}");
+					_logger.LogInformation($"✅ [SYNC] Task created successfully: {dto.TaskId}");
 				}
 
 				return Ok(new { success = true, message = "Task synced", taskId = dto.TaskId });
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Sync error: {ex.Message}\n{ex.StackTrace}");
+				_logger.LogError($"❌ [SYNC] Sync error for task {dto.TaskId}: {ex.Message}");
+				_logger.LogError($"❌ [SYNC] StackTrace: {ex.StackTrace}");
 				return StatusCode(500, new { error = ex.Message });
 			}
 		}
