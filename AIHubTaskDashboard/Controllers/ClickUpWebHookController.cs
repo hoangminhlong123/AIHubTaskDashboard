@@ -5,95 +5,81 @@ using System.Text.Json;
 namespace AIHubTaskDashboard.Controllers
 {
 	[ApiController]
-	[Route("api/clickup")]
-	public class ClickUpWebhookController : ControllerBase
+	[Route("api/clickup-webhook")]
+	public class ClickUpWebHookController : ControllerBase
 	{
+		private readonly ILogger<ClickUpWebHookController> _logger;
 		private readonly ClickUpService _clickUpService;
-		private readonly ILogger<ClickUpWebhookController> _logger;
 
-		public ClickUpWebhookController(ClickUpService clickUpService, ILogger<ClickUpWebhookController> logger)
+		public ClickUpWebHookController(
+			ILogger<ClickUpWebHookController> logger,
+			ClickUpService clickUpService)
 		{
-			_clickUpService = clickUpService;
 			_logger = logger;
+			_clickUpService = clickUpService;
 		}
 
 		/// <summary>
-		/// Webhook endpoint để nhận events từ ClickUp
+		/// Endpoint nhận webhook từ ClickUp
 		/// </summary>
-		[HttpPost("webhook")]
-		public async Task<IActionResult> Webhook([FromBody] JsonElement payload)
+		[HttpPost]
+		public async Task<IActionResult> HandleWebhook([FromBody] JsonElement payload)
 		{
 			try
 			{
-				_logger.LogInformation($"📥 Webhook received: {payload}");
+				_logger.LogInformation($"📩 Webhook received at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+				_logger.LogInformation($"📩 Payload: {payload}");
 
-				// Validate payload
-				if (!payload.TryGetProperty("event", out var eventTypeElement))
+				// Lấy event type
+				if (!payload.TryGetProperty("event", out var eventProp))
 				{
-					_logger.LogWarning("⚠️ Invalid payload: missing 'event' property");
-					return BadRequest(new { error = "Invalid payload format: missing 'event'" });
+					_logger.LogWarning("⚠️ No 'event' property in webhook payload");
+					return Ok(new { success = false, message = "No event property" });
 				}
 
-				var eventType = eventTypeElement.GetString();
+				var eventType = eventProp.GetString();
+				_logger.LogInformation($"📩 Event type: {eventType}");
 
-				if (string.IsNullOrEmpty(eventType))
-				{
-					_logger.LogWarning("⚠️ Invalid payload: empty event type");
-					return BadRequest(new { error = "Invalid payload format: empty event type" });
-				}
-
-				// Process webhook
+				// Xử lý event
 				await _clickUpService.HandleWebhookEventAsync(eventType, payload);
 
-				return Ok(new
-				{
-					success = true,
-					message = "Webhook processed successfully",
-					eventType,
-					timestamp = DateTime.UtcNow
-				});
+				return Ok(new { success = true, message = "Webhook processed", eventType });
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Webhook error: {ex.Message}\n{ex.StackTrace}");
+				_logger.LogError($"❌ Webhook error: {ex.Message}");
+				_logger.LogError($"❌ StackTrace: {ex.StackTrace}");
 				return StatusCode(500, new { error = ex.Message });
 			}
 		}
 
-		
+		/// <summary>
+		/// Test endpoint để verify webhook hoạt động
+		/// </summary>
 		[HttpGet("test")]
 		public IActionResult Test()
 		{
+			_logger.LogInformation("✅ Test endpoint called");
 			return Ok(new
 			{
-				message = "ClickUp webhook endpoint is working!",
-				timestamp = DateTime.UtcNow
+				message = "ClickUp Webhook endpoint is working!",
+				timestamp = DateTime.UtcNow,
+				endpoint = "/api/clickup-webhook"
 			});
 		}
 
-		
-		[HttpPost("sync")]
-		public async Task<IActionResult> ManualSync([FromQuery] string listId)
+		/// <summary>
+		/// Health check endpoint
+		/// </summary>
+		[HttpGet("health")]
+		public IActionResult Health()
 		{
-			try
+			return Ok(new
 			{
-				if (string.IsNullOrEmpty(listId))
-					return BadRequest(new { error = "listId is required" });
-
-				var tasks = await _clickUpService.GetTasksAsync(listId);
-
-				return Ok(new
-				{
-					success = true,
-					message = "Sync completed",
-					data = tasks
-				});
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError($"❌ Manual sync error: {ex.Message}");
-				return StatusCode(500, new { error = ex.Message });
-			}
+				status = "healthy",
+				service = "ClickUp Webhook Service",
+				timestamp = DateTime.UtcNow
+			});
 		}
 	}
 }

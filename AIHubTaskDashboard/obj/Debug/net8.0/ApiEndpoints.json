@@ -1,34 +1,8 @@
 [
   {
-    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebhookController",
-    "Method": "ManualSync",
-    "RelativePath": "api/clickup/sync",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "listId",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebhookController",
-    "Method": "Test",
-    "RelativePath": "api/clickup/test",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebhookController",
-    "Method": "Webhook",
-    "RelativePath": "api/clickup/webhook",
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "HandleWebhook",
+    "RelativePath": "api/clickup-webhook",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -36,6 +10,79 @@
       {
         "Name": "payload",
         "Type": "System.Text.Json.JsonElement",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "Health",
+    "RelativePath": "api/clickup-webhook/health",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "Test",
+    "RelativePath": "api/clickup-webhook/test",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.TasksApiController",
+    "Method": "DeleteTask",
+    "RelativePath": "api/tasks-sync/{clickupTaskId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "clickupTaskId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.TasksApiController",
+    "Method": "UpdateStatus",
+    "RelativePath": "api/tasks-sync/{clickupTaskId}/status",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "clickupTaskId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "AIHubTaskDashboard.Controllers.StatusUpdateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.TasksApiController",
+    "Method": "SyncTask",
+    "RelativePath": "api/tasks-sync/sync",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "AIHubTaskDashboard.Controllers.ClickUpTaskDto",
         "IsRequired": true
       }
     ],

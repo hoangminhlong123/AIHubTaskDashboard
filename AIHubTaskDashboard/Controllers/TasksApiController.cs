@@ -34,7 +34,7 @@ namespace AIHubTaskDashboard.Controllers
 
 				var payload = new
 				{
-					clickup_id = dto.TaskId, // ✅ ĐỔI: clickup_task_id → clickup_id
+					clickup_id = dto.TaskId,
 					title = dto.Name,
 					description = BuildDescription(dto),
 					status = MapClickUpStatus(dto.Status),
@@ -51,7 +51,7 @@ namespace AIHubTaskDashboard.Controllers
 				{
 					// UPDATE existing task
 					var existingTask = JsonDocument.Parse(existingTaskJson).RootElement;
-					var taskId = existingTask.GetProperty("task_id").GetInt32(); // ✅ Backend dùng "task_id"
+					var taskId = existingTask.GetProperty("task_id").GetInt32();
 
 					await _apiClient.PutAsync($"api/v1/tasks/{taskId}", payload);
 					_logger.LogInformation($"✅ Task updated: {dto.TaskId}");
@@ -82,7 +82,6 @@ namespace AIHubTaskDashboard.Controllers
 			{
 				_logger.LogInformation($"🗑️ Deleting task: {clickupTaskId}");
 
-				// 🔍 Tìm task theo clickup_id
 				var taskJson = await TryGetExistingTask(clickupTaskId);
 
 				if (taskJson == null)
@@ -92,7 +91,7 @@ namespace AIHubTaskDashboard.Controllers
 				}
 
 				var task = JsonDocument.Parse(taskJson).RootElement;
-				var taskId = task.GetProperty("task_id").GetInt32(); // ✅ Backend dùng "task_id"
+				var taskId = task.GetProperty("task_id").GetInt32();
 
 				await _apiClient.DeleteAsync($"api/v1/tasks/{taskId}");
 
@@ -116,7 +115,6 @@ namespace AIHubTaskDashboard.Controllers
 			{
 				_logger.LogInformation($"📊 Updating status: {clickupTaskId} → {dto.Status}");
 
-				// 🔍 Tìm task theo clickup_id
 				var taskJson = await TryGetExistingTask(clickupTaskId);
 
 				if (taskJson == null)
@@ -126,7 +124,7 @@ namespace AIHubTaskDashboard.Controllers
 				}
 
 				var task = JsonDocument.Parse(taskJson).RootElement;
-				var taskId = task.GetProperty("task_id").GetInt32(); // ✅ Backend dùng "task_id"
+				var taskId = task.GetProperty("task_id").GetInt32();
 
 				var mappedStatus = MapClickUpStatus(dto.Status);
 				var progress = CalculateProgress(dto.Status);
@@ -152,18 +150,12 @@ namespace AIHubTaskDashboard.Controllers
 		// =============================
 		// 🛠️ HELPER METHODS
 		// =============================
-
-		/// <summary>
-		/// Tìm task trong DB bằng clickup_id
-		/// ✅ FIXED: Dùng đúng field name "clickup_id" thay vì "clickup_task_id"
-		/// </summary>
 		private async Task<string?> TryGetExistingTask(string clickupId)
 		{
 			try
 			{
 				_logger.LogInformation($"🔍 Checking task: clickup_id={clickupId}");
 
-				// ✅ ĐỔI: clickup_task_id → clickup_id
 				var response = await _apiClient.GetAsync($"api/v1/tasks?clickup_id={clickupId}");
 
 				_logger.LogInformation($"📥 Backend response: {response}");
@@ -176,14 +168,12 @@ namespace AIHubTaskDashboard.Controllers
 
 				var tasks = JsonDocument.Parse(response).RootElement;
 
-				// Nếu API trả về array và có phần tử
 				if (tasks.ValueKind == JsonValueKind.Array && tasks.GetArrayLength() > 0)
 				{
 					_logger.LogInformation($"✅ Found existing task");
 					return tasks[0].ToString();
 				}
 
-				// Nếu API trả về object đơn
 				if (tasks.ValueKind == JsonValueKind.Object)
 				{
 					_logger.LogInformation($"✅ Found existing task (single object)");
@@ -239,7 +229,6 @@ Assignees: {string.Join(", ", dto.Assignees)}";
 			if (string.IsNullOrEmpty(dueDate))
 				return DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 
-			// ClickUp timestamp (milliseconds)
 			if (long.TryParse(dueDate, out long timestamp))
 			{
 				var date = DateTimeOffset.FromUnixTimeMilliseconds(timestamp).UtcDateTime;
