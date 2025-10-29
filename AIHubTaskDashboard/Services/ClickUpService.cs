@@ -398,19 +398,62 @@ namespace AIHubTaskDashboard.Services
 		// =============================
 		// 🛠️ Helper Methods
 		// =============================
+		// =============================
+		// 🛠️ Helper Methods - ✅ FIXED NULL HANDLING
+		// =============================
 		private string GetPropertySafe(JsonElement element, string propertyName)
 		{
-			return element.TryGetProperty(propertyName, out var prop) ? prop.GetString() ?? "" : "";
+			try
+			{
+				if (element.TryGetProperty(propertyName, out var prop))
+				{
+					if (prop.ValueKind == JsonValueKind.Null)
+					{
+						return "";
+					}
+					return prop.GetString() ?? "";
+				}
+				return "";
+			}
+			catch (Exception ex)
+			{
+				_logger.LogWarning($"⚠️ GetPropertySafe failed for {propertyName}: {ex.Message}");
+				return "";
+			}
 		}
 
 		private string GetNestedPropertySafe(JsonElement element, string parent, string child)
 		{
-			if (element.TryGetProperty(parent, out var parentProp) &&
-				parentProp.TryGetProperty(child, out var childProp))
+			try
 			{
-				return childProp.GetString() ?? "";
+				if (element.TryGetProperty(parent, out var parentProp))
+				{
+					// ✅ Handle null parent
+					if (parentProp.ValueKind == JsonValueKind.Null)
+					{
+						_logger.LogInformation($"⚠️ Property '{parent}' is null");
+						return "";
+					}
+
+					// ✅ Handle object with child property
+					if (parentProp.ValueKind == JsonValueKind.Object &&
+						parentProp.TryGetProperty(child, out var childProp))
+					{
+						if (childProp.ValueKind == JsonValueKind.Null)
+						{
+							return "";
+						}
+						return childProp.GetString() ?? "";
+					}
+				}
+
+				return "";
 			}
-			return "";
+			catch (Exception ex)
+			{
+				_logger.LogWarning($"⚠️ GetNestedPropertySafe failed for {parent}.{child}: {ex.Message}");
+				return "";
+			}
 		}
 	}
 }
