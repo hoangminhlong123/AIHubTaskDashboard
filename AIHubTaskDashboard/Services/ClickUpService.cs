@@ -71,7 +71,7 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		// =============================
-		// 📥 Task Created - ✅ FIXED: Lấy task từ ClickUp API
+		// 📥 Task Created
 		// =============================
 		private async Task HandleTaskCreated(JsonElement payload)
 		{
@@ -79,7 +79,6 @@ namespace AIHubTaskDashboard.Services
 			{
 				_logger.LogInformation("🔍 HandleTaskCreated: Start");
 
-				// ClickUp webhook chỉ gửi task_id, không có full task object
 				var taskId = GetPropertySafe(payload, "task_id");
 
 				if (string.IsNullOrEmpty(taskId))
@@ -90,7 +89,6 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"📌 Task ID from webhook: {taskId}");
 
-				// Gọi ClickUp API để lấy full task details
 				var taskDetails = await FetchTaskFromClickUp(taskId);
 
 				if (taskDetails == null)
@@ -107,6 +105,7 @@ namespace AIHubTaskDashboard.Services
 				var priority = GetNestedPropertySafe(task, "priority", "priority");
 				var dueDate = GetPropertySafe(task, "due_date");
 				var url = GetPropertySafe(task, "url");
+				var description = GetPropertySafe(task, "description");
 
 				var assignees = new List<string>();
 				if (task.TryGetProperty("assignees", out var assigneesArray))
@@ -121,20 +120,24 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"✅ Task created: {taskName} ({taskId}) | Status: {status} | Assignees: {string.Join(", ", assignees)}");
 
-				// Sync to Dashboard
-				var dto = new
+				// Prepare payload for Dashboard API
+				var dashboardPayload = new
 				{
-					TaskId = taskId,
-					Name = taskName,
-					Status = status,
-					Priority = priority ?? "normal",
-					DueDate = dueDate,
-					Url = url,
-					Assignees = assignees
+					clickup_id = taskId,
+					title = taskName,
+					description = string.IsNullOrEmpty(description) ? $"Synced from ClickUp - Status: {status}" : description,
+					status = MapClickUpStatus(status),
+					progress_percentage = CalculateProgress(status),
+					assignee_id = 1, // Default assignee
+					assigner_id = 1,
+					collaborators = new List<int>(),
+					expected_output = "Auto-synced from ClickUp",
+					deadline = ParseClickUpDate(dueDate),
+					notion_link = url
 				};
 
 				_logger.LogInformation($"📤 Sending sync request to Dashboard API");
-				await _apiClient.PostAsync("api/tasks-sync/sync", dto);
+				await _apiClient.PostAsync("api/v1/tasks", dashboardPayload);
 				_logger.LogInformation($"✅ Successfully synced to Dashboard: {taskId}");
 			}
 			catch (Exception ex)
@@ -145,7 +148,7 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		// =============================
-		// 🔄 Task Updated - ✅ FIXED
+		// 🔄 Task Updated
 		// =============================
 		private async Task HandleTaskUpdated(JsonElement payload)
 		{
@@ -163,6 +166,16 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"📌 Task ID from webhook: {taskId}");
 
+				// Check if task exists in Dashboard
+				var existingTaskJson = await TryGetExistingTask(taskId);
+
+				if (existingTaskJson == null)
+				{
+					_logger.LogWarning($"⚠️ Task not found in Dashboard, creating new: {taskId}");
+					await HandleTaskCreated(payload);
+					return;
+				}
+
 				var taskDetails = await FetchTaskFromClickUp(taskId);
 
 				if (taskDetails == null)
@@ -179,33 +192,27 @@ namespace AIHubTaskDashboard.Services
 				var priority = GetNestedPropertySafe(task, "priority", "priority");
 				var dueDate = GetPropertySafe(task, "due_date");
 				var url = GetPropertySafe(task, "url");
-
-				var assignees = new List<string>();
-				if (task.TryGetProperty("assignees", out var assigneesArray))
-				{
-					foreach (var assignee in assigneesArray.EnumerateArray())
-					{
-						var username = GetPropertySafe(assignee, "username");
-						if (!string.IsNullOrEmpty(username))
-							assignees.Add(username);
-					}
-				}
+				var description = GetPropertySafe(task, "description");
 
 				_logger.LogInformation($"🔄 Task updated: {taskName} ({taskId}) | Status: {status}");
 
-				var dto = new
+				// Get Dashboard task ID
+				var existingTask = JsonDocument.Parse(existingTaskJson).RootElement;
+				var dbTaskId = existingTask.GetProperty("task_id").GetInt32();
+
+				var dashboardPayload = new
 				{
-					TaskId = taskId,
-					Name = taskName,
-					Status = status,
-					Priority = priority ?? "normal",
-					DueDate = dueDate,
-					Url = url,
-					Assignees = assignees
+					clickup_id = taskId,
+					title = taskName,
+					description = string.IsNullOrEmpty(description) ? $"Synced from ClickUp - Status: {status}" : description,
+					status = MapClickUpStatus(status),
+					progress_percentage = CalculateProgress(status),
+					deadline = ParseClickUpDate(dueDate),
+					notion_link = url
 				};
 
-				_logger.LogInformation($"📤 Sending update to Dashboard API");
-				await _apiClient.PostAsync("api/tasks-sync/sync", dto);
+				_logger.LogInformation($"📤 Sending update to Dashboard API (task_id={dbTaskId})");
+				await _apiClient.PutAsync($"api/v1/tasks/{dbTaskId}", dashboardPayload);
 				_logger.LogInformation($"✅ Successfully updated in Dashboard: {taskId}");
 			}
 			catch (Exception ex)
@@ -234,7 +241,18 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"🗑️ Deleting task: {taskId}");
 
-				await _apiClient.DeleteAsync($"api/tasks-sync/{taskId}");
+				var existingTaskJson = await TryGetExistingTask(taskId);
+
+				if (existingTaskJson == null)
+				{
+					_logger.LogWarning($"⚠️ Task not found in Dashboard: {taskId}");
+					return;
+				}
+
+				var existingTask = JsonDocument.Parse(existingTaskJson).RootElement;
+				var dbTaskId = existingTask.GetProperty("task_id").GetInt32();
+
+				await _apiClient.DeleteAsync($"api/v1/tasks/{dbTaskId}");
 				_logger.LogInformation($"✅ Successfully deleted from Dashboard: {taskId}");
 			}
 			catch (Exception ex)
@@ -245,7 +263,7 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		// =============================
-		// 📊 Task Status Updated - ✅ FIXED
+		// 📊 Task Status Updated
 		// =============================
 		private async Task HandleTaskStatusUpdated(JsonElement payload)
 		{
@@ -263,7 +281,16 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"📌 Task ID from webhook: {taskId}");
 
-				// Lấy status mới từ history_items
+				// Check if task exists
+				var existingTaskJson = await TryGetExistingTask(taskId);
+
+				if (existingTaskJson == null)
+				{
+					_logger.LogWarning($"⚠️ Task not found in Dashboard: {taskId}");
+					return;
+				}
+
+				// Get new status from history_items
 				var newStatus = "";
 				if (payload.TryGetProperty("history_items", out var historyItems) && historyItems.GetArrayLength() > 0)
 				{
@@ -287,9 +314,17 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogInformation($"📊 Task status updated: {taskId} → {newStatus}");
 
-				var dto = new { Status = newStatus };
-				_logger.LogInformation($"📤 Sending status update to Dashboard API");
-				await _apiClient.PatchAsync($"api/tasks-sync/{taskId}/status", dto);
+				var existingTask = JsonDocument.Parse(existingTaskJson).RootElement;
+				var dbTaskId = existingTask.GetProperty("task_id").GetInt32();
+
+				var dashboardPayload = new
+				{
+					status = MapClickUpStatus(newStatus),
+					progress_percentage = CalculateProgress(newStatus)
+				};
+
+				_logger.LogInformation($"📤 Sending status update to Dashboard API (task_id={dbTaskId})");
+				await _apiClient.PutAsync($"api/v1/tasks/{dbTaskId}", dashboardPayload);
 				_logger.LogInformation($"✅ Successfully updated status in Dashboard: {taskId} → {newStatus}");
 			}
 			catch (Exception ex)
@@ -319,46 +354,7 @@ namespace AIHubTaskDashboard.Services
 				_logger.LogInformation($"👤 Task assignee updated: {taskId}");
 
 				// Re-sync toàn bộ task
-				var taskDetails = await FetchTaskFromClickUp(taskId);
-
-				if (taskDetails == null)
-				{
-					_logger.LogError($"❌ Cannot fetch task details: {taskId}");
-					return;
-				}
-
-				var task = JsonDocument.Parse(taskDetails).RootElement;
-				var taskName = GetPropertySafe(task, "name");
-				var status = GetNestedPropertySafe(task, "status", "status");
-				var priority = GetNestedPropertySafe(task, "priority", "priority");
-				var dueDate = GetPropertySafe(task, "due_date");
-				var url = GetPropertySafe(task, "url");
-
-				var assignees = new List<string>();
-				if (task.TryGetProperty("assignees", out var assigneesArray))
-				{
-					foreach (var assignee in assigneesArray.EnumerateArray())
-					{
-						var username = GetPropertySafe(assignee, "username");
-						if (!string.IsNullOrEmpty(username))
-							assignees.Add(username);
-					}
-				}
-
-				var dto = new
-				{
-					TaskId = taskId,
-					Name = taskName,
-					Status = status,
-					Priority = priority ?? "normal",
-					DueDate = dueDate,
-					Url = url,
-					Assignees = assignees
-				};
-
-				_logger.LogInformation($"📤 Syncing assignee changes");
-				await _apiClient.PostAsync("api/tasks-sync/sync", dto);
-				_logger.LogInformation($"✅ Successfully synced assignee changes: {taskId}");
+				await HandleTaskUpdated(payload);
 			}
 			catch (Exception ex)
 			{
@@ -396,10 +392,48 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		// =============================
+		// 🔍 Get Existing Task by ClickUp ID
+		// =============================
+		private async Task<string?> TryGetExistingTask(string clickupId)
+		{
+			try
+			{
+				_logger.LogInformation($"🔍 Checking for existing task: clickup_id={clickupId}");
+
+				var response = await _apiClient.GetAsync($"api/v1/tasks?clickup_id={clickupId}");
+
+				if (string.IsNullOrEmpty(response))
+				{
+					_logger.LogInformation("⚠️ No existing task found");
+					return null;
+				}
+
+				var tasks = JsonDocument.Parse(response).RootElement;
+
+				if (tasks.ValueKind == JsonValueKind.Array && tasks.GetArrayLength() > 0)
+				{
+					_logger.LogInformation($"✅ Found existing task");
+					return tasks[0].ToString();
+				}
+
+				if (tasks.ValueKind == JsonValueKind.Object && tasks.TryGetProperty("task_id", out _))
+				{
+					_logger.LogInformation($"✅ Found existing task (single object)");
+					return response;
+				}
+
+				_logger.LogInformation("⚠️ No task found with this clickup_id");
+				return null;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ TryGetExistingTask error: {ex.Message}");
+				return null;
+			}
+		}
+
+		// =============================
 		// 🛠️ Helper Methods
-		// =============================
-		// =============================
-		// 🛠️ Helper Methods - ✅ FIXED NULL HANDLING
 		// =============================
 		private string GetPropertySafe(JsonElement element, string propertyName)
 		{
@@ -428,14 +462,12 @@ namespace AIHubTaskDashboard.Services
 			{
 				if (element.TryGetProperty(parent, out var parentProp))
 				{
-					// ✅ Handle null parent
 					if (parentProp.ValueKind == JsonValueKind.Null)
 					{
 						_logger.LogInformation($"⚠️ Property '{parent}' is null");
 						return "";
 					}
 
-					// ✅ Handle object with child property
 					if (parentProp.ValueKind == JsonValueKind.Object &&
 						parentProp.TryGetProperty(child, out var childProp))
 					{
@@ -454,6 +486,46 @@ namespace AIHubTaskDashboard.Services
 				_logger.LogWarning($"⚠️ GetNestedPropertySafe failed for {parent}.{child}: {ex.Message}");
 				return "";
 			}
+		}
+
+		private string MapClickUpStatus(string clickUpStatus)
+		{
+			return clickUpStatus?.ToLower() switch
+			{
+				"to do" => "To Do",
+				"in progress" => "In Progress",
+				"complete" => "Completed",
+				"closed" => "Completed",
+				"review" => "In Progress",
+				_ => "To Do"
+			};
+		}
+
+		private int CalculateProgress(string status)
+		{
+			return status?.ToLower() switch
+			{
+				"to do" => 0,
+				"in progress" => 50,
+				"review" => 75,
+				"complete" => 100,
+				"closed" => 100,
+				_ => 0
+			};
+		}
+
+		private string ParseClickUpDate(string? dueDate)
+		{
+			if (string.IsNullOrEmpty(dueDate))
+				return DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+
+			if (long.TryParse(dueDate, out long timestamp))
+			{
+				var date = DateTimeOffset.FromUnixTimeMilliseconds(timestamp).UtcDateTime;
+				return date.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+			}
+
+			return DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 		}
 	}
 }
