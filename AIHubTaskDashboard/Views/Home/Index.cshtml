@@ -1,1 +1,24 @@
-﻿
+﻿@model List<AIHubTaskDashboard.ViewModel.MemberViewModel>
+
+<h3>Team Members</h3>
+<div class="row">
+    @foreach (var member in Model)
+    {
+        <div class="col-md-3 mb-3">
+            <div class="card text-center shadow-sm">
+                <img src="@member.AvatarUrl" class="card-img-top rounded-circle mx-auto mt-3" style="width:100px; height:100px;" />
+                <div class="card-body">
+                    <h5 class="card-title">@member.FullName</h5>
+                    <p class="card-text">@member.Role</p>
+                    <span class="badge @member.StatusColor">@member.StatusColor</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .badge.online { background-color: #28a745; color: white; }
+    .badge.offline { background-color: #6c757d; color: white; }
+    .badge.away { background-color: #ffc107; color: black; }
+</style>
