@@ -584,5 +584,6 @@ namespace AIHubTaskDashboard.Services
 
 			return DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 		}
+
 	}
 }

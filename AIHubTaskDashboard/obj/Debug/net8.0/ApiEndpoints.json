@@ -122,5 +122,15 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.UsersController",
+    "Method": "ClearCache",
+    "RelativePath": "api/v1/Users/debug/clear-cache",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
   }
 ]

@@ -10,7 +10,7 @@
     int taskId = Model.TryGetProperty("task_id", out var id) ? id.GetInt32() : 0;
     string title = Model.TryGetProperty("title", out var t) ? t.GetString() : "";
     string description = Model.TryGetProperty("description", out var d) ? d.GetString() : "";
-    string status = Model.TryGetProperty("status", out var s) ? s.GetString() : "";
+    string status = Model.TryGetProperty("status", out var st) ? st.GetString() : "";
     int progress = Model.TryGetProperty("progress_percentage", out var p) ? p.GetInt32() : 0;
     string clickupId = Model.TryGetProperty("clickup_id", out var c) ? c.GetString() : "Chưa đồng bộ";
     int currentAssigneeId = Model.TryGetProperty("assignee_id", out var aid) ? aid.GetInt32() : 0;
@@ -47,9 +47,9 @@
                     @{
                         var taskStatuses = new List<string> { "To Do", "In Progress", "Completed" };
                     }
-                    @foreach (var s in taskStatuses)
+                    @foreach (var statusOption in taskStatuses)
                     {
-                        <option value="@s" selected="@(status == s)">@s</option>
+                        <option value="@statusOption" selected="@(status == statusOption)">@statusOption</option>
                     }
                 </select>
             </div>
@@ -60,8 +60,9 @@
                     <option value="">-- Chọn người giao --</option>
                     @foreach (var user in users)
                     {
-                        var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
-                        var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User";
+                        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() :
+                        (user.TryGetProperty("username", out var un) ? un.GetString() : "Unknown User");
 
                         if (userId == 0) continue;
 

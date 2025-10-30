@@ -4,7 +4,6 @@
 @{
     ViewBag.Title = "Tạo Task Mới";
 
-    // 🔥 DEBUG: Check ViewBag.Users
     var viewBagUsersType = ViewBag.Users?.GetType().Name ?? "NULL";
     System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] ViewBag.Users type: {viewBagUsersType}");
 
@@ -44,15 +43,7 @@
             <div class="alert alert-danger mb-4">@TempData["Error"]</div>
         }
 
-        {{-- 🔥 DEBUG INFO --}}
-        <div class="alert alert-info mb-4">
-            <strong>🐛 DEBUG:</strong><br />
-            ViewBag.Users Type: @viewBagUsersType<br />
-            Users Count: @usersCount<br />
-            Users ValueKind: @usersJson.ValueKind
-        </div>
-
-        <form asp-action="Create" method="post" class="row g-4">
+        <form asp-action="Create" method="post" class="row g-4" id="createTaskForm">
 
             <div class="col-12">
                 <label for="titleInput" class="form-label fw-semibold">Tiêu đề Task <span class="text-danger">*</span></label>
@@ -87,7 +78,6 @@
                 </select>
             </div>
 
-            {{-- ✅ SỬA: Dùng "id" và "name" thay vì "user_id" và "full_name" --}}
             <div class="col-md-4">
                 <label for="assigneeInput" class="form-label fw-semibold">Người thực hiện <span class="text-danger">*</span></label>
                 <select id="assigneeInput" name="assignee_id" class="form-select" required>
@@ -131,8 +121,8 @@
             </div>
 
             <div class="col-12 mt-5">
-                <button type="submit" class="btn btn-success btn-lg me-3">
-                    <i class="bi bi-save me-2"></i> Tạo Task
+                <button type="submit" class="btn btn-success btn-lg me-3" id="submitBtn">
+                    <i class="bi bi-save me-2"></i> <span id="btnText">Tạo Task</span>
                 </button>
                 <a href="@Url.Action("Index", "Tasks")" class="btn btn-outline-secondary btn-lg">
                     Hủy
@@ -142,3 +132,70 @@
 
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // 🔥 Prevent double submit
+        (function() {
+            const form = document.getElementById('createTaskForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            let isSubmitting = false;
+
+            form.addEventListener('submit', function(e) {
+                // Nếu đang submit rồi, ngăn không cho submit lần nữa
+                if (isSubmitting) {
+                    e.preventDefault();
+                    console.warn('⚠️ Form already submitting, preventing double submit');
+                    return false;
+                }
+
+                // Validate form trước
+                if (!form.checkValidity()) {
+                    return true; // Let browser show validation errors
+                }
+
+                // Đánh dấu đang submit
+                isSubmitting = true;
+
+                // Disable button và thay đổi text
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+                btnText.textContent = 'Đang tạo...';
+
+                // Thêm spinner
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm me-2';
+                spinner.setAttribute('role', 'status');
+                submitBtn.insertBefore(spinner, btnText);
+
+                console.log('✅ Form submitting...');
+
+                // Timeout để re-enable nếu có lỗi (sau 10 giây)
+                setTimeout(function() {
+                    if (isSubmitting) {
+                        isSubmitting = false;
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('disabled');
+                        btnText.textContent = 'Tạo Task';
+                        spinner.remove();
+                        console.warn('⚠️ Form submission timeout, re-enabled button');
+                    }
+                }, 10000);
+            });
+
+            // Reset khi quay lại trang (browser back button)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('disabled');
+                    btnText.textContent = 'Tạo Task';
+                    const spinner = submitBtn.querySelector('.spinner-border');
+                    if (spinner) spinner.remove();
+                    console.log('🔄 Page restored from cache, reset form');
+                }
+            });
+        })();
+    </script>
+}

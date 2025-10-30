@@ -148,6 +148,11 @@ namespace AIHubTaskDashboard.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Create(string title, string description, string status, int progress_percentage, int assignee_id)
 		{
+			// 🔥 GENERATE UNIQUE REQUEST ID
+			var requestId = Guid.NewGuid().ToString("N").Substring(0, 8);
+			_logger.LogWarning($"🆔 [CREATE-{requestId}] ===== NEW REQUEST STARTED =====");
+			_logger.LogWarning($"🆔 [CREATE-{requestId}] Timestamp: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}");
+
 			string userIdString = HttpContext.Session.GetString("id");
 
 			int assigner_id = 0;
@@ -158,23 +163,36 @@ namespace AIHubTaskDashboard.Controllers
 
 			if (assigner_id == 0)
 			{
+				_logger.LogError($"❌ [CREATE-{requestId}] Invalid assigner_id");
 				TempData["Error"] = "Người giao không hợp lệ. Vui lòng đăng nhập lại.";
 				return RedirectToAction("Create");
 			}
 
 			try
 			{
-				_logger.LogInformation($"➕ Creating task: {title} with assignee {assignee_id}");
+				_logger.LogInformation($"➕ [CREATE-{requestId}] Creating task:");
+				_logger.LogInformation($"   [CREATE-{requestId}] - Title: {title}");
+				_logger.LogInformation($"   [CREATE-{requestId}] - Assignee ID: {assignee_id}");
+				_logger.LogInformation($"   [CREATE-{requestId}] - Status: {status}");
+				_logger.LogInformation($"   [CREATE-{requestId}] - Description length: {description?.Length ?? 0}");
 
-				// 1️⃣ Tạo task trong ClickUp TRƯỚC với assignee
+				// 🔥 STEP 1: Create in ClickUp
+				_logger.LogInformation($"🔄 [CREATE-{requestId}] STEP 1: Calling ClickUp API...");
 				var clickupTaskId = await _clickUp.CreateTaskAsync(title, description, status, assignee_id);
 
 				if (clickupTaskId == null)
 				{
-					_logger.LogWarning("⚠️ Failed to create task in ClickUp, creating in Dashboard only");
+					_logger.LogWarning($"⚠️ [CREATE-{requestId}] STEP 1 FAILED: ClickUp creation failed");
+					TempData["Warning"] = "Task được tạo trong Dashboard nhưng không sync được sang ClickUp.";
+				}
+				else
+				{
+					_logger.LogInformation($"✅ [CREATE-{requestId}] STEP 1 SUCCESS: ClickUp task ID = {clickupTaskId}");
 				}
 
-				// 2️⃣ Tạo task trong Dashboard với clickup_id
+				// 🔥 STEP 2: Create in Dashboard
+				_logger.LogInformation($"🔄 [CREATE-{requestId}] STEP 2: Creating in Dashboard...");
+
 				var collaborators = new List<int> { assignee_id };
 				string expected_output = "Chưa có yêu cầu đầu ra cụ thể.";
 				string deadline = DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
@@ -194,15 +212,21 @@ namespace AIHubTaskDashboard.Controllers
 					notion_link = string.Empty
 				};
 
+				_logger.LogInformation($"📤 [CREATE-{requestId}] Sending to Dashboard API...");
 				await _api.PostAsync("api/v1/tasks", payload);
+				_logger.LogInformation($"✅ [CREATE-{requestId}] STEP 2 SUCCESS: Task created in Dashboard");
 
-				_logger.LogInformation($"✅ Task created: Dashboard + ClickUp ({clickupTaskId}) | Assignee: {assignee_id}");
-				TempData["Success"] = "Task đã được tạo thành công và đã đồng bộ assignee!";
+				_logger.LogWarning($"🎉 [CREATE-{requestId}] ===== REQUEST COMPLETED SUCCESSFULLY =====");
+				_logger.LogWarning($"🎉 [CREATE-{requestId}] Total time: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}");
+
+				TempData["Success"] = "Task đã được tạo thành công!";
 				return RedirectToAction("Index", "Tasks");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Create error: {ex.Message}");
+				_logger.LogError($"❌ [CREATE-{requestId}] EXCEPTION OCCURRED");
+				_logger.LogError($"❌ [CREATE-{requestId}] Error: {ex.Message}");
+				_logger.LogError($"❌ [CREATE-{requestId}] StackTrace: {ex.StackTrace}");
 				TempData["Error"] = $"Tạo Task thất bại: {ex.Message}";
 				return RedirectToAction("Create");
 			}

@@ -38,6 +38,16 @@ namespace AIHubTaskDashboard.Controllers
 			_httpClient.DefaultRequestHeaders.Add("User-Agent", "AIHubTaskDashboard");
 		}
 
+		// 🔥 THÊM ENDPOINT CLEAR CACHE
+		[HttpGet("debug/clear-cache")]
+		public IActionResult ClearCache()
+		{
+			_cachedUsers = null;
+			_cacheExpiry = DateTime.MinValue;
+			_logger.LogInformation("🗑️ [USERS] Cache cleared successfully");
+			return Ok(new { message = "Cache cleared successfully", timestamp = DateTime.UtcNow });
+		}
+
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{
@@ -110,8 +120,9 @@ namespace AIHubTaskDashboard.Controllers
 					{
 						id = int.TryParse(sessionUserId, out var uid) ? uid : 1,
 						name = sessionUserName,
-						email = $"{sessionUserName.ToLower()}@aihub.com",
-						username = sessionUserName
+						email = $"{sessionUserName.ToLower().Replace(" ", "")}@charm.contact",
+						username = sessionUserName,
+						clickup_id = "294795597" // Default to Hubos AI
 					}
 				};
 
@@ -228,20 +239,20 @@ namespace AIHubTaskDashboard.Controllers
 						: "User";
 
 					var email = user.TryGetProperty("email", out var emailProp)
-						? (emailProp.GetString() ?? $"{username}@clickup.com")
-						: $"{username}@clickup.com";
+						? (emailProp.GetString() ?? $"{username.ToLower().Replace(" ", "")}@charm.contact")
+						: $"{username.ToLower().Replace(" ", "")}@charm.contact";
 
-					// Tạo user object cho Dashboard
+					// 🔥 Tạo user object cho Dashboard với clickup_id
 					users.Add(new
 					{
 						id = dashboardUserId++,
 						name = username,
 						email = email,
 						username = username,
-						clickup_id = clickUpId
+						clickup_id = clickUpId  // 🔥 QUAN TRỌNG: Field này để mapping
 					});
 
-					_logger.LogInformation($"   👤 {username} (ClickUp ID: {clickUpId})");
+					_logger.LogInformation($"   👤 {username} | Email: {email} | ClickUp ID: {clickUpId}");
 				}
 
 				_logger.LogInformation($"✅ [USERS] Successfully fetched {users.Count} users from ClickUp");
