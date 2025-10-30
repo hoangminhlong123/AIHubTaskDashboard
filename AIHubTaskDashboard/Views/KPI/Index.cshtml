@@ -1,0 +1,257 @@
+﻿@using System.Text.Json
+@model System.Text.Json.JsonElement
+
+@{
+    ViewBag.Title = "KPI Hub";
+    var currentTeam = ViewBag.CurrentTeam as string ?? "Dev";
+    var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
+    var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+                KPI Hub - Realtime Dashboard
+            </h2>
+            <p class="text-muted">Dashboard cập nhật mỗi 60 giây • Hiển thị KPI theo từng team</p>
+        </div>
+    </div>
+
+    <!-- 3 TABS: Dev / Content / Admin -->
+    <ul class="nav nav-tabs mb-4" id="kpiTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(currentTeam == "Dev" ? "active" : "")" 
+                    id="dev-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#dev" 
+                    type="button" 
+                    role="tab"
+                    onclick="loadTeamKPI('Dev')">
+                <i class="bi bi-code-slash me-2"></i>Dev Team
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(currentTeam == "Content" ? "active" : "")" 
+                    id="content-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#content" 
+                    type="button" 
+                    role="tab"
+                    onclick="loadTeamKPI('Content')">
+                <i class="bi bi-pencil-square me-2"></i>Content Team
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(currentTeam == "Admin" ? "active" : "")" 
+                    id="admin-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#admin" 
+                    type="button" 
+                    role="tab"
+                    onclick="loadTeamKPI('Admin')">
+                <i class="bi bi-shield-check me-2"></i>Admin Team
+            </button>
+        </li>
+    </ul>
+
+    <!-- TAB CONTENT -->
+    <div class="tab-content" id="kpiTabContent">
+        <div class="tab-pane fade show active" id="@currentTeam.ToLower()" role="tabpanel">
+
+            <!-- TEAM OVERVIEW CARDS -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                                    <i class="bi bi-people-fill text-primary fs-3"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Thành viên</h6>
+                                    <h3 class="mb-0 fw-bold" id="totalMembers">@users.Count()</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                                    <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Tasks hoàn thành</h6>
+                                    <h3 class="mb-0 fw-bold" id="completedTasks">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                                    <i class="bi bi-hourglass-split text-warning fs-3"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Đang thực hiện</h6>
+                                    <h3 class="mb-0 fw-bold" id="inProgressTasks">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded">
+                                    <i class="bi bi-percent text-info fs-3"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Tỉ lệ hoàn thành</h6>
+                                    <h3 class="mb-0 fw-bold" id="completionRate">0%</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI TABLE BY MEMBER -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-bar-chart-line me-2"></i>
+                        KPI Chi tiết theo thành viên
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3">Thành viên</th>
+                                    <th class="text-center py-3">Tasks được giao</th>
+                                    <th class="text-center py-3">Hoàn thành</th>
+                                    <th class="text-center py-3">Đang làm</th>
+                                    <th class="text-center py-3">Tỉ lệ (%)</th>
+                                    <th class="text-center py-3">Trung bình tiến độ</th>
+                                    <th class="text-center py-3">Đánh giá</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kpiTableBody">
+                                @foreach (var user in users)
+                                {
+                                    var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
+                                    var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown";
+                                    var avatar = user.TryGetProperty("avatar_url", out var av) ? av.GetString() : "";
+
+                                        <tr>
+                                            <td class="px-4">
+                                                <div class="d-flex align-items-center">
+                                                @if (!string.IsNullOrEmpty(avatar))
+                                                {
+                                                            <img src="@avatar" alt="@fullName" class="rounded-circle me-3" width="40" height="40">
+                                                }
+                                                else
+                                                {
+                                                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                                 style="width: 40px; height: 40px;">
+                                                                <i class="bi bi-person-fill text-primary"></i>
+                                                            </div>
+                                                }
+                                                    <div>
+                                                        <div class="fw-semibold">@fullName</div>
+                                                        <small class="text-muted">ID: #@userId</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary fs-6">0</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success fs-6">0</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning fs-6">0</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="fw-bold text-primary">0%</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="progress" style="height: 20px; width: 100px; margin: 0 auto;">
+                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 0%">0%</div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="bi bi-star-fill text-warning"></i> --
+                                                </span>
+                                            </td>
+                                        </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUTO REFRESH INDICATOR -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Tự động cập nhật sau: <span id="countdown" class="fw-bold text-primary">60</span>s
+                </small>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let countdownTimer;
+        let countdown = 60;
+
+        // Load KPI data for specific team
+        function loadTeamKPI(team) {
+            console.log('Loading KPI for team:', team);
+            window.location.href = `/KPI?team=${team}`;
+        }
+
+        // Countdown và auto-refresh
+        function startCountdown() {
+            countdown = 60;
+            clearInterval(countdownTimer);
+
+            countdownTimer = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+
+                if (countdown <= 0) {
+                    location.reload();
+                }
+            }, 1000);
+        }
+
+        // Khởi động countdown khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            startCountdown();
+        });
+
+        // Stop countdown khi user rời khỏi trang
+        window.addEventListener('beforeunload', function() {
+            clearInterval(countdownTimer);
+        });
+    </script>
+}

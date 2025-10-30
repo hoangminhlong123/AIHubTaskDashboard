@@ -34,5 +34,93 @@
     "Order": 0,
     "Parameters": [],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.DebugController",
+    "Method": "Health",
+    "RelativePath": "api/debug/health",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.DebugController",
+    "Method": "MapToClickUp",
+    "RelativePath": "api/debug/map-to-clickup/{dashboardUserId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dashboardUserId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.DebugController",
+    "Method": "MapToDashboard",
+    "RelativePath": "api/debug/map-to-dashboard/{clickUpUserId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "clickUpUserId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.DebugController",
+    "Method": "RefreshMapping",
+    "RelativePath": "api/debug/refresh-mapping",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.DebugController",
+    "Method": "GetUserMapping",
+    "RelativePath": "api/debug/user-mapping",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.UsersController",
+    "Method": "GetUsers",
+    "RelativePath": "api/v1/Users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.UsersController",
+    "Method": "GetUser",
+    "RelativePath": "api/v1/Users/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

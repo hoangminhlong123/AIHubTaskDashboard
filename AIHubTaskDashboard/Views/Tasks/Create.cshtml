@@ -4,8 +4,32 @@
 @{
     ViewBag.Title = "Tạo Task Mới";
 
-    var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
+    // 🔥 DEBUG: Check ViewBag.Users
+    var viewBagUsersType = ViewBag.Users?.GetType().Name ?? "NULL";
+    System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] ViewBag.Users type: {viewBagUsersType}");
+
+    JsonElement usersJson;
+
+    if (ViewBag.Users is JsonElement jsonElement)
+    {
+        usersJson = jsonElement;
+        System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users is JsonElement, ValueKind: {jsonElement.ValueKind}");
+    }
+    else if (ViewBag.Users is string jsonString)
+    {
+        usersJson = JsonDocument.Parse(jsonString).RootElement;
+        System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users is String, parsed to JsonElement");
+    }
+    else
+    {
+        usersJson = JsonDocument.Parse("[]").RootElement;
+        System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users is UNKNOWN TYPE, using empty array");
+    }
+
     var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+    var usersCount = users.Count();
+    System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users count: {usersCount}");
+
     var defaultStatus = "To Do";
     var defaultDeadline = DateTime.Now.AddDays(7).ToString("yyyy-MM-dd");
 }
@@ -19,6 +43,14 @@
         {
             <div class="alert alert-danger mb-4">@TempData["Error"]</div>
         }
+
+        {{-- 🔥 DEBUG INFO --}}
+        <div class="alert alert-info mb-4">
+            <strong>🐛 DEBUG:</strong><br />
+            ViewBag.Users Type: @viewBagUsersType<br />
+            Users Count: @usersCount<br />
+            Users ValueKind: @usersJson.ValueKind
+        </div>
 
         <form asp-action="Create" method="post" class="row g-4">
 
@@ -55,30 +87,11 @@
                 </select>
             </div>
 
-            <select id="assigneeInput" name="assignee_id" class="form-select" required>
-                <option value="">-- Chọn người giao --</option>
-                @foreach (var user in users)
-                {
-                    var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
-                    var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
-
-                    if (userId == 0) continue;
-
-                    <option value="@userId">@fullName</option>
-                }
-
-            </select>
-
-
+            {{-- ✅ SỬA: Dùng "id" và "name" thay vì "user_id" và "full_name" --}}
             <div class="col-md-4">
-                <label for="progressInput" class="form-label fw-semibold">Tiến độ (%)</label>
-                <input type="number" id="progressInput" name="progress_percentage" class="form-control" min="0" max="100" value="0" required />
-            </div>
-
-            <div class="col-md-8">
-                <label for="collaboratorsInput" class="form-label fw-semibold">Cộng tác viên (Collaborators)</label>
-                <select id="collaboratorsInput" name="collaborators" class="form-select" multiple>
-                    {{-- SỬ DỤNG DATA ĐỘNG CHO COLLABORATORS (Lặp lại Users) --}}
+                <label for="assigneeInput" class="form-label fw-semibold">Người thực hiện <span class="text-danger">*</span></label>
+                <select id="assigneeInput" name="assignee_id" class="form-select" required>
+                    <option value="">-- Chọn người thực hiện --</option>
                     @foreach (var user in users)
                     {
                         var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
@@ -88,7 +101,26 @@
 
                         <option value="@userId">@fullName</option>
                     }
+                </select>
+            </div>
 
+            <div class="col-md-4">
+                <label for="progressInput" class="form-label fw-semibold">Tiến độ (%)</label>
+                <input type="number" id="progressInput" name="progress_percentage" class="form-control" min="0" max="100" value="0" required />
+            </div>
+
+            <div class="col-md-8">
+                <label for="collaboratorsInput" class="form-label fw-semibold">Cộng tác viên (Collaborators)</label>
+                <select id="collaboratorsInput" name="collaborators" class="form-select" multiple>
+                    @foreach (var user in users)
+                    {
+                        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
+
+                        if (userId == 0) continue;
+
+                        <option value="@userId">@fullName</option>
+                    }
                 </select>
                 <small class="text-muted">Giữ Ctrl hoặc Command để chọn nhiều người.</small>
             </div>
@@ -97,7 +129,6 @@
                 <label for="notionLinkInput" class="form-label fw-semibold">Link Notion/Tài liệu</label>
                 <input type="url" id="notionLinkInput" name="notion_link" class="form-control" placeholder="https://notion.so/..." />
             </div>
-
 
             <div class="col-12 mt-5">
                 <button type="submit" class="btn btn-success btn-lg me-3">

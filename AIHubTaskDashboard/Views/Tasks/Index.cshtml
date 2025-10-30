@@ -9,10 +9,14 @@
     var currentAssigneeId = Context.Request.Query["assignee_id"].FirstOrDefault();
     var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
     var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
-    var userMap = users.ToDictionary(
-        u => u.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0,
-        u => u.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User"
-    );
+
+    // ✅ SỬA: Lọc bỏ user có id = 0 trước khi tạo Dictionary
+    var userMap = users
+        .Where(u => u.TryGetProperty("user_id", out var uid) && uid.GetInt32() != 0)
+        .ToDictionary(
+            u => u.GetProperty("user_id").GetInt32(),
+            u => u.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User"
+        );
 }
 
 <h2 class="fw-bold mb-4">@ViewBag.Title</h2>

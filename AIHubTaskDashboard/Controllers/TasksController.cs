@@ -20,6 +20,61 @@ namespace AIHubTaskDashboard.Controllers
 			_logger = logger;
 		}
 
+		// ✅ HELPER: Lấy users từ LOCAL UsersController (không qua backend Python)
+		private async Task<JsonElement> GetUsersFromLocalApi()
+		{
+			try
+			{
+				_logger.LogInformation("🔄 [USERS] Fetching from LOCAL UsersController...");
+
+				using var httpClient = new HttpClient();
+
+				// Lấy base URL động từ current request
+				var request = HttpContext.Request;
+				var baseUrl = $"{request.Scheme}://{request.Host}/";
+
+				httpClient.BaseAddress = new Uri(baseUrl);
+				httpClient.Timeout = TimeSpan.FromSeconds(15);
+
+				_logger.LogInformation($"📍 [USERS] Base URL: {baseUrl}");
+
+				// ✅ GỌI LOCAL ENDPOINT: /api/v1/users (UsersController local)
+				var response = await httpClient.GetAsync("api/v1/users");
+				var usersRes = await response.Content.ReadAsStringAsync();
+
+				_logger.LogInformation($"📦 [USERS] Response Status: {response.StatusCode}");
+				_logger.LogInformation($"📦 [USERS] Response Length: {usersRes?.Length ?? 0}");
+
+				if (response.IsSuccessStatusCode && !string.IsNullOrEmpty(usersRes))
+				{
+					var users = JsonDocument.Parse(usersRes).RootElement;
+
+					if (users.ValueKind == JsonValueKind.Array)
+					{
+						_logger.LogInformation($"✅ [USERS] Got {users.GetArrayLength()} users from LOCAL API");
+						return users;
+					}
+					else
+					{
+						_logger.LogWarning($"⚠️ [USERS] Response is not an array: {users.ValueKind}");
+					}
+				}
+				else
+				{
+					_logger.LogError($"❌ [USERS] Local API failed: {response.StatusCode}");
+					_logger.LogError($"❌ [USERS] Response: {usersRes}");
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ [USERS] Exception: {ex.Message}");
+				_logger.LogError($"❌ [USERS] StackTrace: {ex.StackTrace}");
+			}
+
+			_logger.LogWarning("⚠️ [USERS] Returning empty array");
+			return JsonDocument.Parse("[]").RootElement;
+		}
+
 		public async Task<IActionResult> Index(string? status, int? assignee_id)
 		{
 			try
@@ -54,20 +109,15 @@ namespace AIHubTaskDashboard.Controllers
 						tasks = JsonDocument.Parse($"[{res}]").RootElement;
 				}
 
-				try
-				{
-					var usersRes = await _api.GetAsync("api/v1/users");
-					ViewBag.Users = JsonDocument.Parse(usersRes).RootElement;
-				}
-				catch
-				{
-					ViewBag.Users = JsonDocument.Parse("[]").RootElement;
-				}
+				// ✅ GỌI LOCAL API thay vì backend Python
+				ViewBag.Users = await GetUsersFromLocalApi();
 
 				return View(tasks);
 			}
 			catch (Exception ex)
 			{
+				_logger.LogError($"❌ [INDEX] Error: {ex.Message}");
+				ViewBag.Users = JsonDocument.Parse("[]").RootElement;
 				var emptyJson = JsonDocument.Parse("[]").RootElement;
 				return View(emptyJson);
 			}
@@ -76,21 +126,23 @@ namespace AIHubTaskDashboard.Controllers
 		[HttpGet]
 		public async Task<IActionResult> Create()
 		{
-			JsonElement users;
-
 			try
 			{
-				var usersRes = await _api.GetAsync("api/v1/members");
-				users = JsonDocument.Parse(usersRes).RootElement;
-			}
-			catch
-			{
-				users = JsonDocument.Parse("[]").RootElement;
-			}
+				_logger.LogInformation("🔄 [CREATE] Loading Create page...");
 
-			ViewBag.Users = users;
-			var emptyJson = JsonDocument.Parse("{}").RootElement;
-			return View(emptyJson);
+				// ✅ GỌI LOCAL API thay vì backend Python
+				ViewBag.Users = await GetUsersFromLocalApi();
+
+				var emptyJson = JsonDocument.Parse("{}").RootElement;
+				return View(emptyJson);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ [CREATE] Error: {ex.Message}");
+				ViewBag.Users = JsonDocument.Parse("[]").RootElement;
+				var emptyJson = JsonDocument.Parse("{}").RootElement;
+				return View(emptyJson);
+			}
 		}
 
 		[HttpPost]
@@ -112,10 +164,10 @@ namespace AIHubTaskDashboard.Controllers
 
 			try
 			{
-				_logger.LogInformation($"➕ Creating task: {title}");
+				_logger.LogInformation($"➕ Creating task: {title} with assignee {assignee_id}");
 
-				// 1️⃣ Tạo task trong ClickUp TRƯỚC
-				var clickupTaskId = await _clickUp.CreateTaskAsync(title, description, status);
+				// 1️⃣ Tạo task trong ClickUp TRƯỚC với assignee
+				var clickupTaskId = await _clickUp.CreateTaskAsync(title, description, status, assignee_id);
 
 				if (clickupTaskId == null)
 				{
@@ -129,7 +181,7 @@ namespace AIHubTaskDashboard.Controllers
 
 				var payload = new
 				{
-					clickup_id = clickupTaskId, // ✅ Link với ClickUp
+					clickup_id = clickupTaskId,
 					title,
 					description,
 					assigner_id,
@@ -144,8 +196,8 @@ namespace AIHubTaskDashboard.Controllers
 
 				await _api.PostAsync("api/v1/tasks", payload);
 
-				_logger.LogInformation($"✅ Task created: Dashboard + ClickUp ({clickupTaskId})");
-				TempData["Success"] = "Task đã được tạo thành công!";
+				_logger.LogInformation($"✅ Task created: Dashboard + ClickUp ({clickupTaskId}) | Assignee: {assignee_id}");
+				TempData["Success"] = "Task đã được tạo thành công và đã đồng bộ assignee!";
 				return RedirectToAction("Index", "Tasks");
 			}
 			catch (Exception ex)
@@ -167,28 +219,29 @@ namespace AIHubTaskDashboard.Controllers
 			else
 				task = JsonDocument.Parse(res).RootElement;
 
+			// ✅ GỌI LOCAL API thay vì backend Python
+			ViewBag.Users = await GetUsersFromLocalApi();
+
 			return View(task);
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Edit(int id, string title, string description, string status, int progress_percentage)
+		public async Task<IActionResult> Edit(int id, string title, string description, string status, int progress_percentage, int? assignee_id)
 		{
 			try
 			{
 				_logger.LogInformation($"🔄 Updating task: {id}");
 
-				// 1️⃣ Lấy task từ Dashboard để có clickup_id
 				var taskRes = await _api.GetAsync($"api/v1/tasks/{id}");
 				var task = JsonDocument.Parse(taskRes).RootElement;
 
-				// 2️⃣ Update ClickUp nếu có clickup_id
 				if (task.TryGetProperty("clickup_id", out var clickupIdProp))
 				{
 					var clickupId = clickupIdProp.GetString();
 					if (!string.IsNullOrEmpty(clickupId))
 					{
 						_logger.LogInformation($"🔄 Syncing update to ClickUp: {clickupId}");
-						await _clickUp.UpdateTaskAsync(clickupId, title, description, status);
+						await _clickUp.UpdateTaskAsync(clickupId, title, description, status, assignee_id);
 					}
 					else
 					{
@@ -196,8 +249,14 @@ namespace AIHubTaskDashboard.Controllers
 					}
 				}
 
-				// 3️⃣ Update Dashboard
-				var payload = new { title, description, status, progress_percentage };
+				var payload = new
+				{
+					title,
+					description,
+					status,
+					progress_percentage,
+					assignee_id
+				};
 				await _api.PutAsync($"api/v1/tasks/{id}", payload);
 
 				_logger.LogInformation($"✅ Task updated: {id}");
@@ -219,11 +278,9 @@ namespace AIHubTaskDashboard.Controllers
 			{
 				_logger.LogInformation($"🗑️ Deleting task: {id}");
 
-				// 1️⃣ Lấy task từ Dashboard để có clickup_id
 				var taskRes = await _api.GetAsync($"api/v1/tasks/{id}");
 				var task = JsonDocument.Parse(taskRes).RootElement;
 
-				// 2️⃣ Delete ClickUp nếu có clickup_id
 				if (task.TryGetProperty("clickup_id", out var clickupIdProp))
 				{
 					var clickupId = clickupIdProp.GetString();
@@ -234,7 +291,6 @@ namespace AIHubTaskDashboard.Controllers
 					}
 				}
 
-				// 3️⃣ Delete Dashboard
 				await _api.DeleteAsync($"api/v1/tasks/{id}");
 
 				_logger.LogInformation($"✅ Task deleted: {id}");

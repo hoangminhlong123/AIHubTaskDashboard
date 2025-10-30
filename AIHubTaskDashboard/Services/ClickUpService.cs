@@ -13,16 +13,19 @@ namespace AIHubTaskDashboard.Services
 		private readonly string _token;
 		private readonly ILogger<ClickUpService> _logger;
 		private readonly ApiClientService _apiClient;
+		private readonly UserMappingService _userMapping;
 
 		public ClickUpService(
 			IConfiguration config,
 			ILogger<ClickUpService> logger,
-			ApiClientService apiClient)
+			ApiClientService apiClient,
+			UserMappingService userMapping)
 		{
 			_httpClient = new HttpClient();
 			_token = config["ClickUpSettings:Token"] ?? "";
 			_logger = logger;
 			_apiClient = apiClient;
+			_userMapping = userMapping;
 
 			var baseUrl = config["ClickUpSettings:ApiBaseUrl"] ?? "https://api.clickup.com/api/v2/";
 			_httpClient.BaseAddress = new Uri(baseUrl);
@@ -71,6 +74,64 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		// =============================
+		// 🎯 Map ClickUp Assignees to Dashboard
+		// =============================
+		private async Task<int> MapClickUpAssigneeToDashboard(JsonElement task)
+		{
+			try
+			{
+				_logger.LogInformation("🔍 [MAPPING] Starting assignee mapping...");
+
+				if (!task.TryGetProperty("assignees", out var assigneesArray))
+				{
+					_logger.LogWarning("⚠️ [MAPPING] No 'assignees' property found, using default assignee");
+					return 1;
+				}
+
+				if (assigneesArray.GetArrayLength() == 0)
+				{
+					_logger.LogWarning("⚠️ [MAPPING] Assignees array is empty, using default assignee");
+					return 1;
+				}
+
+				// Lấy assignee đầu tiên (primary assignee)
+				var primaryAssignee = assigneesArray[0];
+				var clickUpUserId = GetPropertySafe(primaryAssignee, "id");
+				var clickUpUsername = GetPropertySafe(primaryAssignee, "username");
+				var clickUpEmail = GetPropertySafe(primaryAssignee, "email");
+
+				_logger.LogInformation($"📋 [MAPPING] ClickUp Assignee Info:");
+				_logger.LogInformation($"   - ID: {clickUpUserId}");
+				_logger.LogInformation($"   - Username: {clickUpUsername}");
+				_logger.LogInformation($"   - Email: {clickUpEmail}");
+
+				if (string.IsNullOrEmpty(clickUpUserId))
+				{
+					_logger.LogWarning("⚠️ [MAPPING] Invalid ClickUp user ID, using default");
+					return 1;
+				}
+
+				// Map sang Dashboard user
+				var dashboardUserId = await _userMapping.MapClickUpUserToDashboard(clickUpUserId);
+
+				if (dashboardUserId.HasValue)
+				{
+					_logger.LogInformation($"✅ [MAPPING] Successfully mapped: ClickUp {clickUpUserId} → Dashboard {dashboardUserId.Value}");
+					return dashboardUserId.Value;
+				}
+
+				_logger.LogWarning($"⚠️ [MAPPING] No mapping found for ClickUp user {clickUpUserId}, using default assignee");
+				return 1;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ [MAPPING] MapClickUpAssigneeToDashboard error: {ex.Message}");
+				_logger.LogError($"❌ [MAPPING] StackTrace: {ex.StackTrace}");
+				return 1;
+			}
+		}
+
+		// =============================
 		// 📥 Task Created
 		// =============================
 		private async Task HandleTaskCreated(JsonElement payload)
@@ -107,18 +168,10 @@ namespace AIHubTaskDashboard.Services
 				var url = GetPropertySafe(task, "url");
 				var description = GetPropertySafe(task, "description");
 
-				var assignees = new List<string>();
-				if (task.TryGetProperty("assignees", out var assigneesArray))
-				{
-					foreach (var assignee in assigneesArray.EnumerateArray())
-					{
-						var username = GetPropertySafe(assignee, "username");
-						if (!string.IsNullOrEmpty(username))
-							assignees.Add(username);
-					}
-				}
+				// 🔥 Map assignee từ ClickUp sang Dashboard
+				var assigneeId = await MapClickUpAssigneeToDashboard(task);
 
-				_logger.LogInformation($"✅ Task created: {taskName} ({taskId}) | Status: {status} | Assignees: {string.Join(", ", assignees)}");
+				_logger.LogInformation($"✅ Task created: {taskName} ({taskId}) | Status: {status} | Assignee: {assigneeId}");
 
 				// Prepare payload for Dashboard API
 				var dashboardPayload = new
@@ -128,15 +181,15 @@ namespace AIHubTaskDashboard.Services
 					description = string.IsNullOrEmpty(description) ? $"Synced from ClickUp - Status: {status}" : description,
 					status = MapClickUpStatus(status),
 					progress_percentage = CalculateProgress(status),
-					assignee_id = 1, // Default assignee
-					assigner_id = 1,
-					collaborators = new List<int>(),
+					assignee_id = assigneeId,
+					assigner_id = assigneeId,
+					collaborators = new List<int> { assigneeId },
 					expected_output = "Auto-synced from ClickUp",
 					deadline = ParseClickUpDate(dueDate),
 					notion_link = url
 				};
 
-				_logger.LogInformation($"📤 Sending sync request to Dashboard API");
+				_logger.LogInformation($"📤 Sending sync request to Dashboard API with assignee_id={assigneeId}");
 				await _apiClient.PostAsync("api/v1/tasks", dashboardPayload);
 				_logger.LogInformation($"✅ Successfully synced to Dashboard: {taskId}");
 			}
@@ -194,7 +247,10 @@ namespace AIHubTaskDashboard.Services
 				var url = GetPropertySafe(task, "url");
 				var description = GetPropertySafe(task, "description");
 
-				_logger.LogInformation($"🔄 Task updated: {taskName} ({taskId}) | Status: {status}");
+				// 🔥 Map assignee từ ClickUp sang Dashboard
+				var assigneeId = await MapClickUpAssigneeToDashboard(task);
+
+				_logger.LogInformation($"🔄 Task updated: {taskName} ({taskId}) | Status: {status} | Assignee: {assigneeId}");
 
 				// Get Dashboard task ID
 				var existingTask = JsonDocument.Parse(existingTaskJson).RootElement;
@@ -207,11 +263,12 @@ namespace AIHubTaskDashboard.Services
 					description = string.IsNullOrEmpty(description) ? $"Synced from ClickUp - Status: {status}" : description,
 					status = MapClickUpStatus(status),
 					progress_percentage = CalculateProgress(status),
+					assignee_id = assigneeId,
 					deadline = ParseClickUpDate(dueDate),
 					notion_link = url
 				};
 
-				_logger.LogInformation($"📤 Sending update to Dashboard API (task_id={dbTaskId})");
+				_logger.LogInformation($"📤 Sending update to Dashboard API (task_id={dbTaskId}, assignee_id={assigneeId})");
 				await _apiClient.PutAsync($"api/v1/tasks/{dbTaskId}", dashboardPayload);
 				_logger.LogInformation($"✅ Successfully updated in Dashboard: {taskId}");
 			}

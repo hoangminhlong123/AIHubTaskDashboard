@@ -9,15 +9,18 @@ namespace AIHubTaskDashboard.Services
 		private readonly string _token;
 		private readonly string _listId;
 		private readonly ILogger<ClickUpApiService> _logger;
+		private readonly UserMappingService _userMapping;
 
 		public ClickUpApiService(
 			IConfiguration config,
-			ILogger<ClickUpApiService> logger)
+			ILogger<ClickUpApiService> logger,
+			UserMappingService userMapping)
 		{
 			_httpClient = new HttpClient();
 			_token = config["ClickUpSettings:Token"] ?? "";
 			_listId = config["ClickUpSettings:ListId"] ?? "";
 			_logger = logger;
+			_userMapping = userMapping;
 
 			var baseUrl = config["ClickUpSettings:ApiBaseUrl"] ?? "https://api.clickup.com/api/v2/";
 			_httpClient.BaseAddress = new Uri(baseUrl);
@@ -25,18 +28,39 @@ namespace AIHubTaskDashboard.Services
 			_httpClient.DefaultRequestHeaders.Add("User-Agent", "AIHubTaskDashboard");
 		}
 
-		// CREATE Task in ClickUp
-		public async Task<string?> CreateTaskAsync(string title, string description, string status)
+		// ✅ CREATE Task với Assignee mapping
+		public async Task<string?> CreateTaskAsync(string title, string description, string status, int? assigneeId = null)
 		{
 			try
 			{
 				_logger.LogInformation($"➕ Creating task in ClickUp: {title}");
 
+				// 🔥 Map Dashboard assignee sang ClickUp user
+				List<int>? clickUpAssignees = null;
+				if (assigneeId.HasValue)
+				{
+					var clickUpUserId = await _userMapping.MapDashboardUserToClickUp(assigneeId.Value);
+					if (!string.IsNullOrEmpty(clickUpUserId))
+					{
+						// ClickUp yêu cầu assignees là array of integers
+						if (int.TryParse(clickUpUserId, out var cuId))
+						{
+							clickUpAssignees = new List<int> { cuId };
+							_logger.LogInformation($"✅ Mapped assignee: Dashboard {assigneeId} → ClickUp {clickUpUserId}");
+						}
+					}
+					else
+					{
+						_logger.LogWarning($"⚠️ No ClickUp mapping found for Dashboard user {assigneeId}");
+					}
+				}
+
 				var payload = new
 				{
 					name = title,
 					description = description,
-					status = MapDashboardStatusToClickUp(status)
+					status = MapDashboardStatusToClickUp(status),
+					assignees = clickUpAssignees // 🔥 Thêm assignees
 				};
 
 				var response = await _httpClient.PostAsJsonAsync($"list/{_listId}/task", payload);
@@ -61,18 +85,37 @@ namespace AIHubTaskDashboard.Services
 			}
 		}
 
-		// UPDATE Task in ClickUp
-		public async Task<bool> UpdateTaskAsync(string clickupId, string title, string description, string status)
+		// ✅ UPDATE Task với Assignee mapping
+		public async Task<bool> UpdateTaskAsync(string clickupId, string title, string description, string status, int? assigneeId = null)
 		{
 			try
 			{
 				_logger.LogInformation($"🔄 Updating task in ClickUp: {clickupId}");
 
+				// 🔥 Map assignee nếu có
+				List<object>? assignees = null;
+				if (assigneeId.HasValue)
+				{
+					var clickUpUserId = await _userMapping.MapDashboardUserToClickUp(assigneeId.Value);
+					if (!string.IsNullOrEmpty(clickUpUserId))
+					{
+						if (int.TryParse(clickUpUserId, out var cuId))
+						{
+							assignees = new List<object>
+							{
+								new { add = cuId, rem = (int?)null }
+							};
+							_logger.LogInformation($"✅ Mapped assignee for update: Dashboard {assigneeId} → ClickUp {clickUpUserId}");
+						}
+					}
+				}
+
 				var payload = new
 				{
 					name = title,
 					description = description,
-					status = MapDashboardStatusToClickUp(status)
+					status = MapDashboardStatusToClickUp(status),
+					assignees = assignees // 🔥 Update assignees
 				};
 
 				var response = await _httpClient.PutAsJsonAsync($"task/{clickupId}", payload);
@@ -94,7 +137,7 @@ namespace AIHubTaskDashboard.Services
 			}
 		}
 
-		// DELETE Task in ClickUp
+		// ✅ DELETE Task
 		public async Task<bool> DeleteTaskAsync(string clickupId)
 		{
 			try
