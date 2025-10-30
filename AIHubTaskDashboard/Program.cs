@@ -1,3 +1,4 @@
+using AIHUBOS.Dashboard.Services;
 using AIHubTaskDashboard.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<ApiClientService>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddSingleton<TelegramService>();
 
 // Session
 builder.Services.AddSession(options =>
@@ -38,7 +40,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
-
+app.UseMiddleware<TelegramLogMiddleware>();
 app.MapControllerRoute(
 	name: "default",
 	pattern: "{controller=Home}/{action=Index}/{id?}");
