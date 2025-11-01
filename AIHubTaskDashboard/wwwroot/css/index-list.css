@@ -1,0 +1,753 @@
+﻿/* ============================================
+   🔥 TASKS PAGE - LUXURY DESIGN (NO BOOTSTRAP)
+   File: tasks-luxury.css
+   Prefix: tk- (Tasks)
+   ============================================ */
+
+/* CSS Variables - Based on Color Palette */
+:root {
+    --tk-navy: #0F1330;
+    --tk-pale: #E9D9C5;
+    --tk-sand: #C3A387;
+    --tk-terracotta: #7A3F30;
+    --tk-gold: #D4A459;
+    --tk-clay: #CC7051;
+    /* Status Colors */
+    --tk-success: #22c55e;
+    --tk-warning: #f59e0b;
+    --tk-danger: #ef4444;
+    --tk-info: #3b82f6;
+    /* Shadows & Effects */
+    --tk-shadow-sm: 0 2px 8px rgba(15, 19, 48, 0.08);
+    --tk-shadow-md: 0 4px 16px rgba(15, 19, 48, 0.12);
+    --tk-shadow-lg: 0 10px 40px rgba(15, 19, 48, 0.16);
+    --tk-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.tk-page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--tk-navy);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+.tk-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--tk-navy);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ============================================
+   ALERTS
+   ============================================ */
+.tk-alert {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    position: relative;
+    animation: tk-slideDown 0.4s ease;
+}
+
+.tk-alert-success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+    border-left: 4px solid var(--tk-success);
+    color: #166534;
+}
+
+.tk-alert-danger {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+    border-left: 4px solid var(--tk-danger);
+    color: #991b1b;
+}
+
+.tk-alert-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+    border-left: 4px solid var(--tk-warning);
+    color: #92400e;
+}
+
+.tk-alert-close {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.6;
+    transition: var(--tk-transition);
+}
+
+    .tk-alert-close:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+/* ============================================
+   CARDS
+   ============================================ */
+.tk-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--tk-shadow-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    transition: var(--tk-transition);
+}
+
+    .tk-card:hover {
+        box-shadow: var(--tk-shadow-lg);
+    }
+
+.tk-card-body {
+    padding: 1.75rem;
+}
+
+.tk-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--tk-navy);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+.tk-form {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.25rem;
+}
+
+.tk-form-col-12 {
+    grid-column: span 12;
+}
+
+.tk-form-col-6 {
+    grid-column: span 6;
+}
+
+.tk-form-col-4 {
+    grid-column: span 4;
+}
+
+.tk-form-col-3 {
+    grid-column: span 3;
+}
+
+.tk-form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--tk-navy);
+    margin-bottom: 0.5rem;
+}
+
+    .tk-form-label i {
+        color: var(--tk-gold);
+        margin-right: 0.25rem;
+    }
+
+.tk-input,
+.tk-select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    border: 2px solid var(--tk-pale);
+    border-radius: 10px;
+    background: white;
+    color: var(--tk-navy);
+    transition: var(--tk-transition);
+    font-family: inherit;
+}
+
+    .tk-input:focus,
+    .tk-select:focus {
+        outline: none;
+        border-color: var(--tk-gold);
+        box-shadow: 0 0 0 3px rgba(212, 164, 89, 0.1);
+    }
+
+    .tk-input::placeholder {
+        color: var(--tk-sand);
+    }
+
+.tk-input-lg {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+}
+
+.tk-input-group {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.tk-input-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--tk-sand);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.tk-input-group .tk-input {
+    padding-left: 3rem;
+}
+
+.tk-input-group .tk-btn-clear {
+    position: absolute;
+    right: 0.5rem;
+    background: var(--tk-pale);
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: var(--tk-navy);
+    cursor: pointer;
+    transition: var(--tk-transition);
+}
+
+    .tk-input-group .tk-btn-clear:hover {
+        background: var(--tk-sand);
+    }
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.tk-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--tk-transition);
+    font-family: inherit;
+    text-decoration: none;
+}
+
+    .tk-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+.tk-btn-primary {
+    background: linear-gradient(135deg, var(--tk-gold), var(--tk-clay));
+    color: white;
+    box-shadow: 0 4px 15px rgba(212, 164, 89, 0.3);
+}
+
+    .tk-btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 164, 89, 0.4);
+    }
+
+.tk-btn-success {
+    background: linear-gradient(135deg, var(--tk-success), #16a34a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
+
+    .tk-btn-success:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+
+.tk-btn-info {
+    background: linear-gradient(135deg, var(--tk-info), #2563eb);
+    color: white;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+    .tk-btn-info:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+.tk-btn-outline-secondary {
+    background: transparent;
+    color: var(--tk-navy);
+    border: 2px solid var(--tk-pale);
+}
+
+    .tk-btn-outline-secondary:hover:not(:disabled) {
+        background: var(--tk-pale);
+        border-color: var(--tk-sand);
+    }
+
+.tk-btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.tk-btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.05rem;
+}
+
+.tk-btn-group {
+    display: inline-flex;
+    gap: 0.5rem;
+}
+
+.tk-btn-outline-primary {
+    background: transparent;
+    color: var(--tk-gold);
+    border: 2px solid var(--tk-gold);
+}
+
+    .tk-btn-outline-primary:hover:not(:disabled) {
+        background: var(--tk-gold);
+        color: white;
+    }
+
+.tk-btn-outline-danger {
+    background: transparent;
+    color: var(--tk-danger);
+    border: 2px solid var(--tk-danger);
+}
+
+    .tk-btn-outline-danger:hover:not(:disabled) {
+        background: var(--tk-danger);
+        color: white;
+    }
+
+/* ============================================
+   HEADER SECTION
+   ============================================ */
+.tk-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.tk-header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--tk-navy);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tk-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--tk-gold), var(--tk-clay));
+    color: white;
+}
+
+.tk-header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* ============================================
+   TABLE
+   ============================================ */
+.tk-table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+}
+
+.tk-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+    .tk-table thead {
+        background: linear-gradient(135deg, var(--tk-navy), #1a1f4d);
+    }
+
+        .tk-table thead th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+            .tk-table thead th.tk-text-center {
+                text-align: center;
+            }
+
+    .tk-table tbody tr {
+        border-bottom: 1px solid rgba(233, 217, 197, 0.3);
+        transition: var(--tk-transition);
+    }
+
+        .tk-table tbody tr:hover {
+            background: linear-gradient(135deg, rgba(233, 217, 197, 0.1), rgba(195, 163, 135, 0.05));
+        }
+
+        .tk-table tbody tr.tk-overdue {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.03));
+        }
+
+    .tk-table tbody td {
+        padding: 1rem;
+        font-size: 0.9rem;
+        color: #334155;
+    }
+
+        .tk-table tbody td.tk-text-center {
+            text-align: center;
+        }
+
+.tk-text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+/* ============================================
+   BADGES & STATUS
+   ============================================ */
+.tk-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tk-status-success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+    color: #166534;
+    border: 2px solid var(--tk-success);
+}
+
+.tk-status-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+    color: #92400e;
+    border: 2px solid var(--tk-warning);
+}
+
+.tk-status-info {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+    color: #1e40af;
+    border: 2px solid var(--tk-info);
+}
+
+/* ============================================
+   PROGRESS BAR
+   ============================================ */
+.tk-progress {
+    width: 100%;
+    height: 24px;
+    background: rgba(233, 217, 197, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.tk-progress-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: white;
+    transition: width 0.6s ease;
+    position: relative;
+}
+
+.tk-progress-success {
+    background: linear-gradient(90deg, var(--tk-success), #16a34a);
+}
+
+.tk-progress-info {
+    background: linear-gradient(90deg, var(--tk-info), #2563eb);
+}
+
+.tk-progress-primary {
+    background: linear-gradient(90deg, var(--tk-gold), var(--tk-clay));
+}
+
+.tk-progress-warning {
+    background: linear-gradient(90deg, var(--tk-warning), #f59e0b);
+}
+
+.tk-progress-danger {
+    background: linear-gradient(90deg, var(--tk-danger), #dc2626);
+}
+
+/* ============================================
+   TAGS
+   ============================================ */
+.tk-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.tk-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--tk-info), #3b82f6);
+    color: white;
+    text-decoration: none;
+    transition: var(--tk-transition);
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+    .tk-tag:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+.tk-tag-secondary {
+    background: linear-gradient(135deg, var(--tk-sand), var(--tk-terracotta));
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+.tk-pagination {
+    margin-top: 2rem;
+}
+
+.tk-pagination-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tk-pagination-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 45px;
+    height: 45px;
+    padding: 0 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--tk-navy);
+    background: white;
+    border: 2px solid var(--tk-pale);
+    border-radius: 10px;
+    text-decoration: none;
+    transition: var(--tk-transition);
+}
+
+    .tk-pagination-item:hover:not(.tk-disabled):not(.tk-active) {
+        background: var(--tk-pale);
+        border-color: var(--tk-sand);
+        transform: translateY(-2px);
+    }
+
+    .tk-pagination-item.tk-active {
+        background: linear-gradient(135deg, var(--tk-gold), var(--tk-clay));
+        color: white;
+        border-color: var(--tk-gold);
+    }
+
+    .tk-pagination-item.tk-disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+.tk-pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 45px;
+    height: 45px;
+    color: var(--tk-sand);
+}
+
+.tk-pagination-info {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+    .tk-pagination-info strong {
+        color: var(--tk-navy);
+        font-weight: 700;
+    }
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.tk-empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, rgba(233, 217, 197, 0.1), rgba(195, 163, 135, 0.05));
+    border-radius: 16px;
+    border: 2px dashed var(--tk-pale);
+}
+
+    .tk-empty-state i {
+        font-size: 3rem;
+        color: var(--tk-gold);
+        margin-bottom: 1rem;
+    }
+
+    .tk-empty-state p {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .tk-empty-state strong {
+        color: var(--tk-navy);
+    }
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.tk-text-danger {
+    color: var(--tk-danger);
+}
+
+.tk-text-muted {
+    color: #94a3b8;
+}
+
+.tk-text-center {
+    text-align: center;
+}
+
+.tk-fw-bold {
+    font-weight: 700;
+}
+
+.tk-fw-semibold {
+    font-weight: 600;
+}
+
+.tk-mb-4 {
+    margin-bottom: 2rem;
+}
+
+.tk-mb-3 {
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   HIGHLIGHT
+   ============================================ */
+.tk-highlight {
+    background: linear-gradient(135deg, var(--tk-warning), #fbbf24);
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: #78350f;
+    font-weight: 600;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes tk-slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes tk-fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 992px) {
+    .tk-form-col-6,
+    .tk-form-col-4,
+    .tk-form-col-3 {
+        grid-column: span 6;
+    }
+
+    .tk-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .tk-form-col-6,
+    .tk-form-col-4,
+    .tk-form-col-3 {
+        grid-column: span 12;
+    }
+
+    .tk-page-title {
+        font-size: 1.5rem;
+    }
+
+    .tk-card-body {
+        padding: 1.25rem;
+    }
+
+    .tk-table {
+        font-size: 0.85rem;
+    }
+
+        .tk-table thead th,
+        .tk-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+
+    .tk-pagination-nav {
+        flex-wrap: wrap;
+    }
+}

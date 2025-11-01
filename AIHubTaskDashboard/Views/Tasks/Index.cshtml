@@ -5,31 +5,192 @@
     var tasks = Model.ValueKind == JsonValueKind.Array ? Model.EnumerateArray() : Enumerable.Empty<JsonElement>();
     ViewBag.Title = "Quản lý Công việc";
 
+    // Get query parameters
     var currentStatus = Context.Request.Query["status"].FirstOrDefault();
     var currentAssigneeId = Context.Request.Query["assignee_id"].FirstOrDefault();
-    var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
+    var currentAssignerId = Context.Request.Query["assigner_id"].FirstOrDefault();
+    var currentSearch = Context.Request.Query["search"].FirstOrDefault();
+    var currentSortBy = Context.Request.Query["sort_by"].FirstOrDefault();
+    var currentSortOrder = Context.Request.Query["sort_order"].FirstOrDefault() ?? "desc";
+    var currentTagFilter = Context.Request.Query["tag_filter"].FirstOrDefault();
+
+    // Pagination
+    var pageSize = 20;
+    var currentPage = 1;
+    if (int.TryParse(Context.Request.Query["page"].FirstOrDefault(), out var parsedPage))
+    {
+        currentPage = parsedPage > 0 ? parsedPage : 1;
+    }
+
+    var totalTasks = tasks.Count();
+    var totalPages = (int)Math.Ceiling(totalTasks / (double)pageSize);
+    var pagedTasks = tasks.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    // Parse users từ ViewBag
+    JsonElement usersJson;
+    if (ViewBag.Users is JsonElement jsonElement)
+    {
+        usersJson = jsonElement;
+    }
+    else if (ViewBag.Users is string jsonString)
+    {
+        usersJson = JsonDocument.Parse(jsonString).RootElement;
+    }
+    else
+    {
+        usersJson = JsonDocument.Parse("[]").RootElement;
+    }
+
     var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
 
-    // ✅ SỬA: Lọc bỏ user có id = 0 trước khi tạo Dictionary
-    var userMap = users
-        .Where(u => u.TryGetProperty("user_id", out var uid) && uid.GetInt32() != 0)
-        .ToDictionary(
-            u => u.GetProperty("user_id").GetInt32(),
-            u => u.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User"
-        );
+    // Tạo user mapping dictionary
+    var userMap = new Dictionary<int, string>();
+    foreach (var user in users)
+    {
+        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
+
+        if (userId != 0 && !userMap.ContainsKey(userId))
+        {
+            userMap[userId] = fullName;
+        }
+    }
+
+    // Helper functions
+    string GetStatusClass(string status) => status switch
+    {
+        "Completed" => "tk-status-success",
+        "In Progress" => "tk-status-warning",
+        "To Do" => "tk-status-info",
+        _ => "tk-status-info"
+    };
+
+    string GetProgressClass(int progress) => progress switch
+    {
+        100 => "tk-progress-success",
+        >= 75 => "tk-progress-info",
+        >= 50 => "tk-progress-primary",
+        >= 25 => "tk-progress-warning",
+        _ => "tk-progress-danger"
+    };
+
+    bool IsOverdue(JsonElement task)
+    {
+        if (!task.TryGetProperty("deadline", out var deadlineElement))
+            return false;
+
+        var deadlineStr = deadlineElement.GetString();
+        if (string.IsNullOrEmpty(deadlineStr))
+            return false;
+
+        if (DateTime.TryParse(deadlineStr, out var deadline))
+        {
+            var status = task.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "";
+            return deadline < DateTime.Now && status != "Completed";
+        }
+
+        return false;
+    }
+
+    string GetUserName(int userId)
+    {
+        return userMap.ContainsKey(userId) ? userMap[userId] : $"User #{userId}";
+    }
+
+    string BuildQueryString(int? page = null)
+    {
+        var queryParams = new List<string>();
+
+        if (!string.IsNullOrEmpty(currentSearch))
+            queryParams.Add($"search={Uri.EscapeDataString(currentSearch)}");
+        if (!string.IsNullOrEmpty(currentStatus))
+            queryParams.Add($"status={Uri.EscapeDataString(currentStatus)}");
+        if (!string.IsNullOrEmpty(currentAssigneeId))
+            queryParams.Add($"assignee_id={currentAssigneeId}");
+        if (!string.IsNullOrEmpty(currentAssignerId))
+            queryParams.Add($"assigner_id={currentAssignerId}");
+        if (!string.IsNullOrEmpty(currentTagFilter))
+            queryParams.Add($"tag_filter={Uri.EscapeDataString(currentTagFilter)}");
+        if (!string.IsNullOrEmpty(currentSortBy))
+            queryParams.Add($"sort_by={currentSortBy}");
+        if (!string.IsNullOrEmpty(currentSortOrder))
+            queryParams.Add($"sort_order={currentSortOrder}");
+        if (page.HasValue)
+            queryParams.Add($"page={page.Value}");
+
+        return queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+    }
 }
 
-<h2 class="fw-bold mb-4">@ViewBag.Title</h2>
+<link rel="stylesheet" href="~/css/tasks-luxury.css">
+@* <link href="~/css/index-list.css" rel="stylesheet" />
+ *@
+<h2 class="tk-page-title tk-fw-bold tk-mb-4">@ViewBag.Title</h2>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h5 class="card-title mb-3"><i class="bi bi-filter me-2"></i> Bộ lọc Tasks</h5>
-        <form method="get" asp-action="Index" class="row g-3 align-items-end">
+@if (TempData["Success"] != null)
+{
+    <div class="tk-alert tk-alert-success" role="alert">
+        <i class="bi bi-check-circle"></i>
+        <span>@TempData["Success"]</span>
+        <button type="button" class="tk-alert-close" data-dismiss="alert">&times;</button>
+    </div>
+}
 
-            <div class="col-md-4">
-                <label for="statusFilter" class="form-label">Trạng thái</label>
-                <select name="status" id="statusFilter" class="form-select">
-                    <option value="">-- Tất cả --</option>
+@if (TempData["Error"] != null)
+{
+    <div class="tk-alert tk-alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>@TempData["Error"]</span>
+        <button type="button" class="tk-alert-close" data-dismiss="alert">&times;</button>
+    </div>
+}
+
+@if (TempData["Warning"] != null)
+{
+    <div class="tk-alert tk-alert-warning" role="alert">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>@TempData["Warning"]</span>
+        <button type="button" class="tk-alert-close" data-dismiss="alert">&times;</button>
+    </div>
+}
+
+<!-- Bộ lọc và Tìm kiếm -->
+<div class="tk-card tk-mb-4">
+    <div class="tk-card-body">
+        <h5 class="tk-card-title">
+            <i class="bi bi-funnel"></i>Tìm kiếm và Bộ lọc Tasks
+        </h5>
+        <form method="get" asp-action="Index" class="tk-form" id="filterForm">
+
+            <!-- Ô tìm kiếm -->
+            <div class="tk-form-col-12">
+                <label for="searchInput" class="tk-form-label">
+                    <i class="bi bi-search"></i>Tìm kiếm theo tiêu đề, mô tả hoặc ClickUp ID
+                </label>
+                <div class="tk-input-group">
+                    <i class="tk-input-icon bi bi-search"></i>
+                    <input type="text"
+                           name="search"
+                           id="searchInput"
+                           class="tk-input tk-input-lg"
+                           placeholder="Nhập từ khóa tìm kiếm..."
+                           value="@currentSearch">
+                    @if (!string.IsNullOrEmpty(currentSearch))
+                    {
+                        <button type="button" class="tk-btn-clear" onclick="clearSearch()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="tk-form-col-3">
+                <label for="statusFilter" class="tk-form-label">
+                    <i class="bi bi-bookmark"></i>Trạng thái
+                </label>
+                <select name="status" id="statusFilter" class="tk-select">
+                    <option value="">-- Tất cả trạng thái --</option>
                     @{
                         var statuses = new List<string> { "To Do", "In Progress", "Completed" };
                     }
@@ -40,108 +201,492 @@
                 </select>
             </div>
 
-            <div class="col-md-4">
-                <label for="assigneeFilter" class="form-label">Người được giao</label>
-                <select name="assignee_id" id="assigneeFilter" class="form-select">
+            <div class="tk-form-col-3">
+                <label for="assigneeFilter" class="tk-form-label">
+                    <i class="bi bi-person-check"></i>Người thực hiện
+                </label>
+                <select name="assignee_id" id="assigneeFilter" class="tk-select">
                     <option value="">-- Tất cả --</option>
                     @foreach (var user in users)
                     {
-                        var userId = user.TryGetProperty("user_id", out var uid) ? uid.GetInt32() : 0;
-                        var fullName = user.TryGetProperty("full_name", out var fn) ? fn.GetString() : "Unknown User";
+                        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
 
                         if (userId == 0) continue;
 
-                        var isUserSelected = currentAssigneeId == userId.ToString();
-
-                        <option value="@userId" selected="@isUserSelected">@fullName</option>
+                        var isSelected = currentAssigneeId == userId.ToString();
+                        <option value="@userId" selected="@isSelected">@fullName</option>
                     }
                 </select>
             </div>
 
-            <div class="col-md-4 d-flex">
-                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-search"></i> Lọc</button>
-                <a href="@Url.Action("Index")" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i> Xóa lọc</a>
+            <div class="tk-form-col-3">
+                <label for="assignerFilter" class="tk-form-label">
+                    <i class="bi bi-person-fill"></i>Người giao việc
+                </label>
+                <select name="assigner_id" id="assignerFilter" class="tk-select">
+                    <option value="">-- Tất cả --</option>
+                    @foreach (var user in users)
+                    {
+                        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
+
+                        if (userId == 0) continue;
+
+                        var isSelected = currentAssignerId == userId.ToString();
+                        <option value="@userId" selected="@isSelected">@fullName</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Tag Filter -->
+            <div class="tk-form-col-3">
+                <label for="tagFilter" class="tk-form-label">
+                    <i class="bi bi-tag"></i>Lọc theo Tag
+                </label>
+                <select name="tag_filter" id="tagFilter" class="tk-select">
+                    <option value="">-- Tất cả tags --</option>
+                    @{
+                        List<string> availableTags = ViewBag.AllTags as List<string> ?? new List<string>();
+                    }
+                    @foreach (var tagName in availableTags)
+                    {
+                        if (string.IsNullOrEmpty(tagName)) continue;
+
+                        var isSelected = currentTagFilter == tagName;
+                        <option value="@tagName" selected="@isSelected">@tagName</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Sắp xếp -->
+            <div class="tk-form-col-12">
+                <label for="sortByFilter" class="tk-form-label">
+                    <i class="bi bi-sort-down"></i>Sắp xếp
+                </label>
+                <div style="display: flex; gap: 0.75rem; max-width: 400px;">
+                    <select name="sort_by" id="sortByFilter" class="tk-select">
+                        <option value="">Mặc định</option>
+                        <option value="task_id" selected="@(currentSortBy == "task_id")">ID</option>
+                        <option value="title" selected="@(currentSortBy == "title")">Tiêu đề</option>
+                        <option value="status" selected="@(currentSortBy == "status")">Trạng thái</option>
+                        <option value="progress" selected="@(currentSortBy == "progress")">Tiến độ</option>
+                        <option value="deadline" selected="@(currentSortBy == "deadline")">Deadline</option>
+                        <option value="created_at" selected="@(currentSortBy == "created_at")">Ngày tạo</option>
+                    </select>
+                    <select name="sort_order" id="sortOrderFilter" class="tk-select" style="max-width: 110px;">
+                        <option value="asc" selected="@(currentSortOrder == "asc")">↑ Tăng</option>
+                        <option value="desc" selected="@(currentSortOrder == "desc")">↓ Giảm</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Reset button -->
+            <div class="tk-form-col-12">
+                <a href="@Url.Action("Index")" class="tk-btn tk-btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i>Đặt lại tất cả bộ lọc
+                </a>
             </div>
         </form>
     </div>
 </div>
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Danh sách Task</h3>
-    <a class="btn btn-success btn-lg" href="@Url.Action("Create", "Tasks")">
-        <i class="bi bi-plus-circle me-2"></i> Thêm Task
-    </a>
+
+<!-- Header -->
+<div class="tk-header tk-mb-3">
+    <h3 class="tk-header-title">
+        Danh sách Task
+        <span class="tk-badge">@totalTasks tasks</span>
+        @if (!string.IsNullOrEmpty(currentSearch))
+        {
+            <small class="tk-text-muted">(Tìm kiếm: "@currentSearch")</small>
+        }
+        @if (!string.IsNullOrEmpty(currentTagFilter))
+        {
+            <small class="tk-text-muted">(Tag: "@currentTagFilter")</small>
+        }
+    </h3>
+    <div class="tk-header-actions">
+        @{
+            List<string> allTags = ViewBag.AllTags as List<string> ?? new List<string>();
+            if (allTags.Count == 0 && Context.Request.Query["skip_tags"].FirstOrDefault() != "false")
+            {
+                <a href="@Url.Action("Index", new { skip_tags = "false" })" class="tk-btn tk-btn-info">
+                    <i class="bi bi-tags"></i>Load Tags
+                </a>
+            }
+        }
+        <a class="tk-btn tk-btn-success tk-btn-lg" href="@Url.Action("Create", "Tasks")">
+            <i class="bi bi-plus-circle"></i>Thêm Task
+        </a>
+    </div>
 </div>
+
 @if (!tasks.Any())
 {
-    <div class="alert alert-info py-3 shadow-sm">
-        <i class="bi bi-info-circle me-2"></i> Hiện tại chưa có công việc nào phù hợp với bộ lọc.
+    <div class="tk-empty-state">
+        <i class="bi bi-info-circle"></i>
+        <p>
+            @if (!string.IsNullOrEmpty(currentSearch))
+            {
+                <text>Không tìm thấy task nào với từ khóa "<strong>@currentSearch</strong>".</text>
+            }
+            else if (!string.IsNullOrEmpty(currentTagFilter))
+            {
+                <text>Không tìm thấy task nào với tag "<strong>@currentTagFilter</strong>".</text>
+            }
+            else
+            {
+                <text>Không tìm thấy task nào phù hợp với bộ lọc.</text>
+            }
+        </p>
     </div>
 }
 else
 {
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0 task-list-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%;">ID</th>
-                            <th style="width: 35%;">Tiêu đề</th>
-                            <th style="width: 10%;">Trạng thái</th>
-                            <th style="width: 15%;">Người giao</th>
-                            <th style="width: 10%;">Tiến độ</th>
-                            <th style="width: 25%;" class="text-center">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var task in tasks)
+    <div class="tk-card">
+        <div class="tk-table-container">
+            <table class="tk-table">
+                <thead>
+                    <tr>
+                        <th style="width: 4%;" class="tk-text-center">ID</th>
+                        <th style="width: 18%;">Tiêu đề</th>
+                        <th style="width: 9%;" class="tk-text-center">Trạng thái</th>
+                        <th style="width: 10%;">Người giao</th>
+                        <th style="width: 10%;">Người thực hiện</th>
+                        <th style="width: 8%;" class="tk-text-center">Tiến độ</th>
+                        <th style="width: 9%;" class="tk-text-center">Deadline</th>
+                        <th style="width: 10%;" class="tk-text-center">ClickUp ID</th>
+                        <th style="width: 12%;" class="tk-text-center">Tags</th>
+                        <th style="width: 10%;" class="tk-text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in pagedTasks)
+                    {
+                        var taskId = task.TryGetProperty("task_id", out var idElement) ? idElement.GetInt32() : 0;
+                        var title = task.TryGetProperty("title", out var titleElement) ? titleElement.GetString() : "(Không có tiêu đề)";
+                        var status = task.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "To Do";
+                        var progress = task.TryGetProperty("progress_percentage", out var progressElement) ? progressElement.GetInt32() : 0;
+                        var assignerId = task.TryGetProperty("assigner_id", out var assignerIdElement) ? assignerIdElement.GetInt32() : 0;
+                        var assigneeId = task.TryGetProperty("assignee_id", out var assigneeIdElement) ? assigneeIdElement.GetInt32() : 0;
+                        var clickupId = task.TryGetProperty("clickup_id", out var clickupIdElement) ? clickupIdElement.GetString() : "";
+                        var deadlineStr = task.TryGetProperty("deadline", out var deadlineElement) ? deadlineElement.GetString() : "";
+
+                        var assignerName = GetUserName(assignerId);
+                        var assigneeName = GetUserName(assigneeId);
+                        var isOverdue = IsOverdue(task);
+
+                        DateTime? deadline = null;
+                        if (!string.IsNullOrEmpty(deadlineStr) && DateTime.TryParse(deadlineStr, out var parsedDeadline))
                         {
-                            var taskId = task.TryGetProperty("task_id", out var idElement) ? idElement.GetInt32() : 0;
-                            var title = task.TryGetProperty("title", out var titleElement) ? titleElement.GetString() : "(Không có tiêu đề)";
-                            var status = task.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "Unknown";
-                            var progress = task.TryGetProperty("progress_percentage", out var progressElement) ? progressElement.GetInt32() : 0;
-                            var assignerId = task.TryGetProperty("assigner_id", out var aoid) ? aoid.GetInt32() : 0;
-                            var assignerName = userMap.ContainsKey(assignerId) ? userMap[assignerId] : $"User #{assignerId}";
-
-                            // Hàm helper (cần được định nghĩa trong khối @{...} ở đầu View)
-                            string GetStatusBadgeClass(string s) => s switch { "Completed" => "bg-success", "In Progress" => "bg-warning text-dark", "To Do" => "bg-info", _ => "bg-secondary" };
-                            string GetProgressBarClass(int p) => p switch { int n when n == 100 => "bg-success", int n when n >= 50 => "bg-primary", _ => "bg-info" };
-
-
-                            @if (taskId == 0) continue;
-
-                            <tr>
-                                <td>@taskId</td>
-                                <td class="fw-semibold">@title</td>
-                                <td>
-                                    <span class="badge @GetStatusBadgeClass(status) p-2">@status</span>
-                                </td>
-                                <td>
-                                    @assignerName
-                                </td>
-                                <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar @GetProgressBarClass(progress)" style="width: @(progress)%">
-                                            @(progress)%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    <a class="btn btn-sm btn-outline-primary me-2" href="@Url.Action("Edit", "Tasks", new { id = taskId })" title="Sửa Task">
-                                        <i class="bi bi-pencil"></i> Sửa
-                                    </a>
-                                    <form method="post" asp-action="Delete" asp-controller="Tasks" style="display:inline" onsubmit="return confirm('Bạn có chắc muốn xóa task: @title không?');">
-                                        <input type="hidden" name="id" value="@taskId" />
-                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa Task">
-                                            <i class="bi bi-trash"></i> Xóa
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+                            deadline = parsedDeadline;
                         }
-                    </tbody>
-                </table>
-            </div>
+
+                        if (taskId == 0) continue;
+
+                        // Get task tags
+                        Dictionary<string, List<string>> taskTagsDict = ViewBag.TaskTags as Dictionary<string, List<string>> ?? new Dictionary<string, List<string>>();
+                        List<string>? taskTags = null;
+
+                        if (!string.IsNullOrEmpty(clickupId) && taskTagsDict.ContainsKey(clickupId))
+                        {
+                            taskTags = taskTagsDict[clickupId];
+                        }
+
+                        <tr class="@(isOverdue ? "tk-overdue" : "")">
+                            <td class="tk-text-center tk-fw-bold">@taskId</td>
+                            <td>
+                                <div class="tk-fw-semibold tk-text-truncate" title="@title">
+                                    @title
+                                </div>
+                                @if (isOverdue)
+                                {
+                                    <small class="tk-text-danger">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Quá hạn
+                                    </small>
+                                }
+                            </td>
+                            <td class="tk-text-center">
+                                <span class="tk-status-badge @GetStatusClass(status)">
+                                    @status
+                                </span>
+                            </td>
+                            <td>
+                                <i class="bi bi-person-fill" style="color: var(--tk-gold);"></i>
+                                <span class="tk-text-truncate" style="display: inline-block; max-width: 100px;" title="@assignerName">
+                                    @assignerName
+                                </span>
+                            </td>
+                            <td>
+                                <i class="bi bi-person-check-fill" style="color: var(--tk-success);"></i>
+                                <span class="tk-text-truncate" style="display: inline-block; max-width: 100px;" title="@assigneeName">
+                                    @assigneeName
+                                </span>
+                            </td>
+                            <td class="tk-text-center">
+                                <div class="tk-progress" style="min-width: 60px;">
+                                    <div class="tk-progress-bar @GetProgressClass(progress)"
+                                         style="width: @(progress)%">
+                                        @(progress)%
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="tk-text-center">
+                                @if (deadline.HasValue)
+                                {
+                                    <small class="@(isOverdue ? "tk-text-danger tk-fw-bold" : "")">
+                                        <i class="bi bi-calendar-event"></i>
+                                        @deadline.Value.ToString("dd/MM/yyyy")
+                                    </small>
+                                }
+                                else
+                                {
+                                    <small class="tk-text-muted">N/A</small>
+                                }
+                            </td>
+                            <td class="tk-text-center">
+                                @if (!string.IsNullOrEmpty(clickupId))
+                                {
+                                    if (clickupId.StartsWith("PENDING_"))
+                                    {
+                                        <span class="tk-tag" style="background: linear-gradient(135deg, var(--tk-warning), #f59e0b);" title="@clickupId">
+                                            <i class="bi bi-hourglass-split"></i> Pending
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <a href="https://app.clickup.com/t/@clickupId" target="_blank" class="tk-tag" title="@clickupId">
+                                            <i class="bi bi-box-arrow-up-right"></i> @clickupId.Substring(0, Math.Min(8, clickupId.Length))
+                                        </a>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="tk-text-muted">-</span>
+                                }
+                            </td>
+                            <td class="tk-text-center">
+                                @if (taskTags != null && taskTags.Count > 0)
+                                {
+                                    <div class="tk-tags">
+                                        @foreach (var tag in taskTags.Take(3))
+                                        {
+                                            <a href="@Url.Action("Index", new { tag_filter = tag })"
+                                               class="tk-tag"
+                                               title="@tag">
+                                                <i class="bi bi-tag-fill"></i> @tag
+                                            </a>
+                                        }
+                                        @if (taskTags.Count > 3)
+                                        {
+                                            <span class="tk-tag tk-tag-secondary" title="@string.Join(", ", taskTags.Skip(3))">
+                                                +@(taskTags.Count - 3)
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="tk-text-muted">-</span>
+                                }
+                            </td>
+                            <td class="tk-text-center">
+                                <div class="tk-btn-group">
+                                    <a class="tk-btn tk-btn-sm tk-btn-outline-primary"
+                                       href="@Url.Action("Edit", "Tasks", new { id = taskId })"
+                                       title="Sửa Task">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button"
+                                            class="tk-btn tk-btn-sm tk-btn-outline-danger"
+                                            onclick="confirmDelete(@taskId, '@title.Replace("'", "\\'")' )"
+                                            title="Xóa Task">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1)
+    {
+        <nav class="tk-pagination">
+            <div class="tk-pagination-nav">
+                <!-- First & Previous -->
+                <a class="tk-pagination-item @(currentPage == 1 ? "tk-disabled" : "")"
+                   href="@(currentPage == 1 ? "#" : Url.Action("Index") + BuildQueryString(1))">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+                <a class="tk-pagination-item @(currentPage == 1 ? "tk-disabled" : "")"
+                   href="@(currentPage == 1 ? "#" : Url.Action("Index") + BuildQueryString(currentPage - 1))">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+
+                <!-- Page numbers -->
+                @{
+                    var startPage = Math.Max(1, currentPage - 2);
+                    var endPage = Math.Min(totalPages, currentPage + 2);
+                }
+
+                @if (startPage > 1)
+                {
+                    <a class="tk-pagination-item" href="@Url.Action("Index")@BuildQueryString(1)">1</a>
+                    @if (startPage > 2)
+                    {
+                        <span class="tk-pagination-ellipsis">...</span>
+                    }
+                }
+
+                @for (var i = startPage; i <= endPage; i++)
+                {
+                    <a class="tk-pagination-item @(i == currentPage ? "tk-active" : "")"
+                       href="@Url.Action("Index")@BuildQueryString(i)">@i</a>
+                }
+
+                @if (endPage < totalPages)
+                {
+                    @if (endPage < totalPages - 1)
+                    {
+                        <span class="tk-pagination-ellipsis">...</span>
+                    }
+                    <a class="tk-pagination-item" href="@Url.Action("Index")@BuildQueryString(totalPages)">@totalPages</a>
+                }
+
+                <!-- Next & Last -->
+                <a class="tk-pagination-item @(currentPage == totalPages ? "tk-disabled" : "")"
+                   href="@(currentPage == totalPages ? "#" : Url.Action("Index") + BuildQueryString(currentPage + 1))">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+                <a class="tk-pagination-item @(currentPage == totalPages ? "tk-disabled" : "")"
+                   href="@(currentPage == totalPages ? "#" : Url.Action("Index") + BuildQueryString(totalPages))">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </div>
+
+            <div class="tk-pagination-info">
+                Trang <strong>@currentPage</strong> / <strong>@totalPages</strong>
+                (Hiển thị <strong>@pagedTasks.Count()</strong> / <strong>@totalTasks</strong> tasks)
+            </div>
+        </nav>
+    }
+}
+
+@section Scripts {
+    <script>
+        // 🔥 Prevent multiple submissions
+        let searchTimeout;
+        let isSubmitting = false;
+        const filterForm = document.getElementById('filterForm');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const assigneeFilter = document.getElementById('assigneeFilter');
+        const assignerFilter = document.getElementById('assignerFilter');
+        const tagFilter = document.getElementById('tagFilter');
+        const sortByFilter = document.getElementById('sortByFilter');
+        const sortOrderFilter = document.getElementById('sortOrderFilter');
+
+        // Safe submit function with debounce
+        function safeSubmit() {
+            if (isSubmitting) {
+                console.log('⚠️ Already submitting, skipping...');
+                return;
+            }
+            isSubmitting = true;
+            console.log('✅ Submitting form...');
+            filterForm.submit();
+        }
+
+        // Search with debounce (delay 800ms)
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                safeSubmit();
+            }, 800);
+        });
+
+        // Debounced submit for dropdowns (300ms delay)
+        let dropdownTimeout;
+        function debouncedDropdownSubmit() {
+            clearTimeout(dropdownTimeout);
+            dropdownTimeout = setTimeout(() => {
+                safeSubmit();
+            }, 300);
+        }
+
+        // Apply debounce to all dropdowns
+        statusFilter.addEventListener('change', debouncedDropdownSubmit);
+        assigneeFilter.addEventListener('change', debouncedDropdownSubmit);
+        assignerFilter.addEventListener('change', debouncedDropdownSubmit);
+        tagFilter.addEventListener('change', debouncedDropdownSubmit);
+        sortByFilter.addEventListener('change', debouncedDropdownSubmit);
+        sortOrderFilter.addEventListener('change', debouncedDropdownSubmit);
+
+        function confirmDelete(taskId, taskTitle) {
+            if (confirm(`Bạn có chắc chắn muốn xóa task:\n"${taskTitle}"\n\nHành động này không thể hoàn tác!`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Delete", "Tasks")';
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id';
+                input.value = taskId;
+
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            filterForm.submit();
+        }
+
+        // Auto dismiss alerts
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.tk-alert');
+            alerts.forEach(alert => {
+                const closeBtn = alert.querySelector('.tk-alert-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        alert.style.animation = 'tk-fadeIn 0.3s ease reverse';
+                        setTimeout(() => alert.remove(), 300);
+                    });
+                }
+
+                // Auto dismiss after 5 seconds
+                setTimeout(() => {
+                    alert.style.animation = 'tk-fadeIn 0.3s ease reverse';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+
+            // Highlight search terms
+            const searchTerm = '@currentSearch';
+            if (searchTerm && searchTerm.length > 1) {
+                highlightSearchTerms(searchTerm);
+            }
+        });
+
+        // Highlight search terms in table
+        function highlightSearchTerms(term) {
+            const cells = document.querySelectorAll('.tk-table tbody td');
+            const terms = term.toLowerCase().split(' ').filter(t => t.length > 0);
+
+            cells.forEach(cell => {
+                let html = cell.innerHTML;
+                terms.forEach(searchTerm => {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    html = html.replace(regex, '<mark class="tk-highlight">$1</mark>');
+                });
+                cell.innerHTML = html;
+            });
+        }
+    </script>
 }

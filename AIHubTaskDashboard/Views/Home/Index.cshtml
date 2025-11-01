@@ -3,166 +3,144 @@
     ViewBag.Title = "Dashboard";
 }
 
+<link rel="stylesheet" href="~/css/dashboard-luxury.css">
+
 <!-- Welcome Banner -->
-<div class="mb-4">
-    <h2 class="fw-bold text-primary">
-        <i class="bi bi-speedometer2 me-2"></i>
+<div class="db-welcome-banner">
+    <h2 class="db-welcome-title">
+        <i class="bi bi-speedometer2"></i>
         Dashboard Tổng Quan
     </h2>
-    <p class="text-muted">Xin chào, @(Context.Session.GetString("FullName") ?? "User")! Đây là tổng quan công việc của bạn.</p>
+    <p class="db-welcome-text">Xin chào, @(Context.Session.GetString("FullName") ?? "User")! Đây là tổng quan công việc của bạn.</p>
 </div>
 
 @if (ViewBag.Error != null)
 {
-    <div class="alert alert-danger">
-        <i class="bi bi-exclamation-triangle me-2"></i>
+    <div class="db-alert db-alert-danger">
+        <i class="bi bi-exclamation-triangle"></i>
         @ViewBag.Error
     </div>
 }
 
 @if (Model.TotalTasks == 0)
 {
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle me-2"></i>
-        Chưa có task nào. <a href="/Tasks/Create" class="alert-link">Tạo task đầu tiên</a>
+    <div class="db-alert db-alert-info">
+        <i class="bi bi-info-circle"></i>
+        Chưa có task nào. <a href="/Tasks/Create" class="db-alert-link">Tạo task đầu tiên</a>
     </div>
 }
 else
 {
     <!-- KPI Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 kpi-card h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1 small">Tổng số Task</p>
-                            <h2 class="fw-bold mb-0">@Model.TotalTasks</h2>
-                        </div>
-                        <div class="kpi-icon bg-primary bg-opacity-10 rounded-circle p-3">
-                            <i class="bi bi-list-task text-primary fs-3"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <a href="/Tasks" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
-                    </div>
+    <div class="db-kpi-grid">
+        <div class="db-kpi-card">
+            <div class="db-kpi-content">
+                <div class="db-kpi-info">
+                    <p class="db-kpi-label">Tổng số Task</p>
+                    <h2 class="db-kpi-value">@Model.TotalTasks</h2>
                 </div>
+                <div class="db-kpi-icon db-kpi-icon-primary">
+                    <i class="bi bi-list-task"></i>
+                </div>
+            </div>
+            <div class="db-kpi-footer">
+                <a href="/Tasks" class="db-btn db-btn-sm db-btn-outline-primary">Xem tất cả</a>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 kpi-card h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1 small">Hoàn thành</p>
-                            <h2 class="fw-bold mb-0 text-success">@Model.CompletedTasks</h2>
-                        </div>
-                        <div class="kpi-icon bg-success bg-opacity-10 rounded-circle p-3">
-                            <i class="bi bi-check-circle text-success fs-3"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
-                            <i class="bi bi-graph-up me-1"></i>
-                            @Model.CompletionRate% completion rate
-                        </span>
-                    </div>
+        <div class="db-kpi-card">
+            <div class="db-kpi-content">
+                <div class="db-kpi-info">
+                    <p class="db-kpi-label">Hoàn thành</p>
+                    <h2 class="db-kpi-value db-text-success">@Model.CompletedTasks</h2>
                 </div>
+                <div class="db-kpi-icon db-kpi-icon-success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+            </div>
+            <div class="db-kpi-footer">
+                <span class="db-badge db-badge-success">
+                    <i class="bi bi-graph-up"></i>
+                    @Model.CompletionRate% completion rate
+                </span>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 kpi-card h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1 small">Đang thực hiện</p>
-                            <h2 class="fw-bold mb-0 text-warning">@Model.InProgressTasks</h2>
-                        </div>
-                        <div class="kpi-icon bg-warning bg-opacity-10 rounded-circle p-3">
-                            <i class="bi bi-hourglass-split text-warning fs-3"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <a href="/Tasks?status=In Progress" class="btn btn-sm btn-outline-warning">Chi tiết</a>
-                    </div>
+        <div class="db-kpi-card">
+            <div class="db-kpi-content">
+                <div class="db-kpi-info">
+                    <p class="db-kpi-label">Đang thực hiện</p>
+                    <h2 class="db-kpi-value db-text-warning">@Model.InProgressTasks</h2>
                 </div>
+                <div class="db-kpi-icon db-kpi-icon-warning">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+            <div class="db-kpi-footer">
+                <a href="/Tasks?status=In Progress" class="db-btn db-btn-sm db-btn-outline-warning">Chi tiết</a>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 kpi-card h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1 small">Quá hạn</p>
-                            <h2 class="fw-bold mb-0 text-danger">@Model.OverdueTasks</h2>
-                        </div>
-                        <div class="kpi-icon bg-danger bg-opacity-10 rounded-circle p-3">
-                            <i class="bi bi-exclamation-triangle text-danger fs-3"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        @if (Model.OverdueTasks > 0)
-                        {
-                            <span class="badge bg-danger bg-opacity-10 text-danger">
-                                <i class="bi bi-alarm me-1"></i>
-                                Cần xử lý!
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success bg-opacity-10 text-success">
-                                <i class="bi bi-check-lg me-1"></i>
-                                On track
-                            </span>
-                        }
-                    </div>
+        <div class="db-kpi-card">
+            <div class="db-kpi-content">
+                <div class="db-kpi-info">
+                    <p class="db-kpi-label">Quá hạn</p>
+                    <h2 class="db-kpi-value db-text-danger">@Model.OverdueTasks</h2>
                 </div>
+                <div class="db-kpi-icon db-kpi-icon-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="db-kpi-footer">
+                @if (Model.OverdueTasks > 0)
+                {
+                    <span class="db-badge db-badge-danger">
+                        <i class="bi bi-alarm"></i>
+                        Cần xử lý!
+                    </span>
+                }
+                else
+                {
+                    <span class="db-badge db-badge-success">
+                        <i class="bi bi-check-lg"></i>
+                        On track
+                    </span>
+                }
             </div>
         </div>
     </div>
 
     <!-- Charts Row -->
-    <div class="row g-4 mb-4">
+    <div class="db-grid-2">
         <!-- Status Distribution Chart -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="card-title mb-0 fw-bold">
-                        <i class="bi bi-pie-chart text-primary me-2"></i>
-                        Phân bố trạng thái
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="statusChart" style="max-height: 300px;"></canvas>
-                </div>
+        <div class="db-card">
+            <div class="db-card-header">
+                <h5 class="db-card-title">
+                    <i class="bi bi-pie-chart db-text-primary"></i>
+                    Phân bố trạng thái
+                </h5>
+            </div>
+            <div class="db-card-body">
+                <canvas id="statusChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
 
         <!-- Progress Chart -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="card-title mb-0 fw-bold">
-                        <i class="bi bi-graph-up text-success me-2"></i>
-                        Tiến độ tổng quan
-                    </h5>
+        <div class="db-card">
+            <div class="db-card-header">
+                <h5 class="db-card-title">
+                    <i class="bi bi-graph-up db-text-success"></i>
+                    Tiến độ tổng quan
+                </h5>
+            </div>
+            <div class="db-card-body db-progress-overview">
+                <div class="db-progress-display">
+                    <h1 class="db-progress-number">@Model.AverageProgress%</h1>
+                    <p class="db-progress-label">Tiến độ trung bình</p>
                 </div>
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <div class="text-center mb-4">
-                        <h1 class="display-3 fw-bold text-primary mb-0">@Model.AverageProgress%</h1>
-                        <p class="text-muted mb-0">Tiến độ trung bình</p>
-                    </div>
-                    <div class="progress" style="height: 30px;">
-                        <div class="progress-bar bg-gradient" role="progressbar"
-                             style="width: @Model.AverageProgress%;"
-                             aria-valuenow="@Model.AverageProgress"
-                             aria-valuemin="0"
-                             aria-valuemax="100">
-                            @Model.AverageProgress%
-                        </div>
+                <div class="db-progress-bar-container">
+                    <div class="db-progress-bar" style="width: @Model.AverageProgress%;">
+                        @Model.AverageProgress%
                     </div>
                 </div>
             </div>
@@ -170,83 +148,77 @@ else
     </div>
 
     <!-- Team Performance & Recent Tasks -->
-    <div class="row g-4">
+    <div class="db-grid-2">
         <!-- Team Performance -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="card-title mb-0 fw-bold">
-                        <i class="bi bi-people text-info me-2"></i>
-                        Hiệu suất theo thành viên
-                    </h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.TasksByAssignee.Any())
-                    {
-                        <canvas id="teamChart"></canvas>
-                    }
-                    else
-                    {
-                        <p class="text-muted text-center py-4">Chưa có dữ liệu</p>
-                    }
-                </div>
+        <div class="db-card">
+            <div class="db-card-header">
+                <h5 class="db-card-title">
+                    <i class="bi bi-people db-text-info"></i>
+                    Hiệu suất theo thành viên
+                </h5>
+            </div>
+            <div class="db-card-body">
+                @if (Model.TasksByAssignee.Any())
+                {
+                    <canvas id="teamChart"></canvas>
+                }
+                else
+                {
+                    <p class="db-empty-message">Chưa có dữ liệu</p>
+                }
             </div>
         </div>
 
         <!-- Recent Tasks -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="bi bi-clock-history text-warning me-2"></i>
-                            Task gần đây
-                        </h5>
-                        <a href="/Tasks" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
-                    </div>
+        <div class="db-card">
+            <div class="db-card-header">
+                <div class="db-header-flex">
+                    <h5 class="db-card-title">
+                        <i class="bi bi-clock-history db-text-warning"></i>
+                        Task gần đây
+                    </h5>
+                    <a href="/Tasks" class="db-btn db-btn-sm db-btn-outline-primary">Xem tất cả</a>
                 </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        @if (Model.RecentTasks.Any())
+            </div>
+            <div class="db-card-body">
+                <div class="db-task-list">
+                    @if (Model.RecentTasks.Any())
+                    {
+                        @foreach (var task in Model.RecentTasks)
                         {
-                            @foreach (var task in Model.RecentTasks)
+                            var title = task.TryGetProperty("title", out var t) ? t.GetString() : "Untitled";
+                            var status = task.TryGetProperty("status", out var s) ? s.GetString() : "Unknown";
+                            var progress = task.TryGetProperty("progress_percentage", out var p) ? p.GetInt32() : 0;
+                            var taskId = task.TryGetProperty("task_id", out var id) ? id.GetInt32() : 0;
+
+                            var statusClass = status?.ToLower() switch
                             {
-                                var title = task.TryGetProperty("title", out var t) ? t.GetString() : "Untitled";
-                                var status = task.TryGetProperty("status", out var s) ? s.GetString() : "Unknown";
-                                var progress = task.TryGetProperty("progress_percentage", out var p) ? p.GetInt32() : 0;
-                                var taskId = task.TryGetProperty("task_id", out var id) ? id.GetInt32() : 0;
+                                "to do" => "db-badge-secondary",
+                                "pending" => "db-badge-secondary",
+                                "in progress" => "db-badge-warning",
+                                "completed" => "db-badge-success",
+                                "done" => "db-badge-success",
+                                _ => "db-badge-secondary"
+                            };
 
-                                var statusClass = status?.ToLower() switch
-                                {
-                                    "to do" => "bg-secondary",
-                                    "pending" => "bg-secondary",
-                                    "in progress" => "bg-warning",
-                                    "completed" => "bg-success",
-                                    "done" => "bg-success",
-                                    _ => "bg-secondary"
-                                };
-
-                                <a href="/Tasks/Edit/@taskId" class="list-group-item list-group-item-action border-0 mb-2 rounded hover-shadow">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="flex-grow-1 me-3">
-                                            <h6 class="mb-1">@title</h6>
-                                            <span class="badge @statusClass">@status</span>
-                                        </div>
-                                        <div class="text-end">
-                                            <small class="text-muted fw-bold">@progress%</small>
-                                            <div class="progress mt-1" style="width: 80px; height: 6px;">
-                                                <div class="progress-bar bg-primary" style="width: @progress%;"></div>
-                                            </div>
-                                        </div>
+                            <a href="/Tasks/Edit/@taskId" class="db-task-item">
+                                <div class="db-task-item-content">
+                                    <h6 class="db-task-item-title">@title</h6>
+                                    <span class="db-badge @statusClass">@status</span>
+                                </div>
+                                <div class="db-task-item-progress">
+                                    <small class="db-progress-text">@progress%</small>
+                                    <div class="db-progress-mini">
+                                        <div class="db-progress-mini-bar" style="width: @progress%;"></div>
                                     </div>
-                                </a>
-                            }
+                                </div>
+                            </a>
                         }
-                        else
-                        {
-                            <p class="text-muted text-center py-4">Chưa có task nào</p>
-                        }
-                    </div>
+                    }
+                    else
+                    {
+                        <p class="db-empty-message">Chưa có task nào</p>
+                    }
                 </div>
             </div>
         </div>
@@ -255,47 +227,127 @@ else
     @if (Model.TopPerformers.Any())
     {
         <!-- Top Performers -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="bi bi-trophy text-warning me-2"></i>
-                            Top Performers
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            @for (int i = 0; i < Model.TopPerformers.Count; i++)
-                            {
-                                var performer = Model.TopPerformers[i];
-                                var medalIcon = i switch
-                                {
-                                    0 => "🥇",
-                                    1 => "🥈",
-                                    2 => "🥉",
-                                    _ => "⭐"
-                                };
+        <div class="db-card">
+            <div class="db-card-header">
+                <h5 class="db-card-title">
+                    <i class="bi bi-trophy db-text-warning"></i>
+                    Top Performers
+                </h5>
+            </div>
+            <div class="db-card-body">
+                <div class="db-grid-3">
+                    @for (int i = 0; i < Model.TopPerformers.Count; i++)
+                    {
+                        var performer = Model.TopPerformers[i];
+                        var medalIcon = i switch
+                        {
+                            0 => "🥇",
+                            1 => "🥈",
+                            2 => "🥉",
+                            _ => "⭐"
+                        };
 
-                                <div class="col-md-4">
-                                    <div class="card border">
-                                        <div class="card-body text-center">
-                                            <div class="display-4 mb-2">@medalIcon</div>
-                                            <h5 class="fw-bold">@performer.AssigneeName</h5>
-                                            <p class="text-muted mb-2">
-                                                @performer.CompletedTasks/@performer.TotalTasks tasks hoàn thành
-                                            </p>
-                                            <div class="progress" style="height: 10px;">
-                                                <div class="progress-bar bg-success" style="width: @performer.CompletionRate%;"></div>
-                                            </div>
-                                            <small class="text-success fw-bold">@performer.CompletionRate%</small>
+                        <div class="db-performer-card">
+                            <div class="db-performer-medal">@medalIcon</div>
+                            <h5 class="db-performer-name">@performer.AssigneeName</h5>
+                            <p class="db-performer-stats">
+                                @performer.CompletedTasks/@performer.TotalTasks tasks hoàn thành
+                            </p>
+                            <div class="db-progress-bar-container db-progress-small">
+                                <div class="db-progress-bar db-progress-success" style="width: @performer.CompletionRate%;"></div>
+                            </div>
+                            <small class="db-performer-rate">@performer.CompletionRate%</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Detailed Team Statistics -->
+    @if (Model.TasksByAssignee.Any())
+    {
+        <div class="db-card">
+            <div class="db-card-header">
+                <h5 class="db-card-title">
+                    <i class="bi bi-table db-text-info"></i>
+                    Thống kê chi tiết theo thành viên
+                </h5>
+            </div>
+            <div class="db-card-body db-table-container">
+                <table class="db-table">
+                    <thead>
+                        <tr>
+                            <th class="db-text-center" style="width: 5%;">#</th>
+                            <th style="width: 25%;">Thành viên</th>
+                            <th class="db-text-center" style="width: 12%;">Tổng Task</th>
+                            <th class="db-text-center" style="width: 12%;">To Do</th>
+                            <th class="db-text-center" style="width: 12%;">In Progress</th>
+                            <th class="db-text-center" style="width: 12%;">Completed</th>
+                            <th class="db-text-center" style="width: 12%;">Overdue</th>
+                            <th class="db-text-center" style="width: 10%;">Completion Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var sortedAssignees = Model.TasksByAssignee.Values
+                            .OrderByDescending(a => a.CompletionRate)
+                            .ThenByDescending(a => a.TotalTasks)
+                            .ToList();
+                            var rank = 1;
+                        }
+                        @foreach (var assignee in sortedAssignees)
+                        {
+                            <tr>
+                                <td class="db-text-center db-fw-bold">@rank</td>
+                                <td>
+                                    <div class="db-user-cell">
+                                        <div class="db-avatar-circle">
+                                            @assignee.AssigneeName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <div class="db-fw-semibold">@assignee.AssigneeName</div>
+                                            <small class="db-text-muted">ID: @assignee.AssigneeId</small>
                                         </div>
                                     </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
+                                </td>
+                                <td class="db-text-center">
+                                    <span class="db-badge db-badge-primary">@assignee.TotalTasks</span>
+                                </td>
+                                <td class="db-text-center">
+                                    <span class="db-badge db-badge-secondary">@assignee.PendingTasks</span>
+                                </td>
+                                <td class="db-text-center">
+                                    <span class="db-badge db-badge-warning">@assignee.InProgressTasks</span>
+                                </td>
+                                <td class="db-text-center">
+                                    <span class="db-badge db-badge-success">@assignee.CompletedTasks</span>
+                                </td>
+                                <td class="db-text-center">
+                                    @if (assignee.OverdueTasks > 0)
+                                    {
+                                        <span class="db-badge db-badge-danger">
+                                            <i class="bi bi-exclamation-triangle"></i>@assignee.OverdueTasks
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="db-text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="db-text-center">
+                                    <div class="db-completion-cell">
+                                        <div class="db-progress-mini db-progress-table">
+                                            <div class="db-progress-mini-bar db-progress-success" style="width: @assignee.CompletionRate%;"></div>
+                                        </div>
+                                        <small class="db-completion-text">@assignee.CompletionRate%</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            rank++;
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
@@ -307,107 +359,125 @@ else
     @if (Model.TotalTasks > 0)
     {
         <text>
-            // Status Distribution Pie Chart
-            const statusCtx = document.getElementById('statusChart').getContext('2d');
-            new Chart(statusCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Pending', 'In Progress', 'Completed', 'Overdue'],
-                    datasets: [{
-                        data: [@Model.PendingTasks, @Model.InProgressTasks, @Model.CompletedTasks, @Model.OverdueTasks],
-                        backgroundColor: [
-                            'rgba(108, 117, 125, 0.8)',
-                            'rgba(255, 193, 7, 0.8)',
-                            'rgba(25, 135, 84, 0.8)',
-                            'rgba(220, 53, 69, 0.8)'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        }
-                    }
-                }
-            });
-
-            @if (Model.TasksByAssignee.Any())
-            {
-                <text>
-                    // Team Performance Bar Chart
-                    const teamCtx = document.getElementById('teamChart').getContext('2d');
-                    new Chart(teamCtx, {
-                        type: 'bar',
+                    // Status Distribution Pie Chart
+                    const statusCtx = document.getElementById('statusChart').getContext('2d');
+                    new Chart(statusCtx, {
+                        type: 'doughnut',
                         data: {
-                            labels: [@Html.Raw(string.Join(",", Model.TasksByAssignee.Values.Select(a => $"'{a.AssigneeName}'")))],
-                            datasets: [
-                                {
-                                    label: 'Total Tasks',
-                                    data: [@string.Join(",", Model.TasksByAssignee.Values.Select(a => a.TotalTasks))],
-                                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                                },
-                                {
-                                    label: 'Completed',
-                                    data: [@string.Join(",", Model.TasksByAssignee.Values.Select(a => a.CompletedTasks))],
-                                    backgroundColor: 'rgba(25, 135, 84, 0.8)',
-                                }
-                            ]
+                            labels: ['To Do', 'In Progress', 'Completed', 'Overdue'],
+                            datasets: [{
+                                data: [@Model.PendingTasks, @Model.InProgressTasks, @Model.CompletedTasks, @Model.OverdueTasks],
+                                backgroundColor: [
+                                    'rgba(108, 117, 125, 0.8)',
+                                    'rgba(255, 193, 7, 0.8)',
+                                    'rgba(25, 135, 84, 0.8)',
+                                    'rgba(220, 53, 69, 0.8)'
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: true,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        stepSize: 1
-                                    }
-                                }
-                            },
                             plugins: {
                                 legend: {
                                     position: 'bottom',
+                                    labels: {
+                                        padding: 15,
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return `${label}: ${value} tasks (${percentage}%)`;
+                                        }
+                                    }
                                 }
                             }
                         }
                     });
+
+            @if (Model.TasksByAssignee.Any())
+            {
+                <text>
+                                    // Team Performance Bar Chart
+                                    const teamCtx = document.getElementById('teamChart').getContext('2d');
+                                    new Chart(teamCtx, {
+                                        type: 'bar',
+                                        data: {
+                                            labels: [@Html.Raw(string.Join(",", Model.TasksByAssignee.Values.Select(a => $"'{a.AssigneeName}'")))],
+                                            datasets: [
+                                                {
+                                                    label: 'To Do',
+                                                    data: [@string.Join(",", Model.TasksByAssignee.Values.Select(a => a.PendingTasks))],
+                                                    backgroundColor: 'rgba(108, 117, 125, 0.8)',
+                                                },
+                                                {
+                                                    label: 'In Progress',
+                                                    data: [@string.Join(",", Model.TasksByAssignee.Values.Select(a => a.InProgressTasks))],
+                                                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                                                },
+                                                {
+                                                    label: 'Completed',
+                                                    data: [@string.Join(",", Model.TasksByAssignee.Values.Select(a => a.CompletedTasks))],
+                                                    backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                                                },
+                                                {
+                                                    label: 'Overdue',
+                                                    data: [@string.Join(",", Model.TasksByAssignee.Values.Select(a => a.OverdueTasks))],
+                                                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                                                }
+                                            ]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: true,
+                                            scales: {
+                                                x: {
+                                                    stacked: true,
+                                                },
+                                                y: {
+                                                    stacked: true,
+                                                    beginAtZero: true,
+                                                    ticks: {
+                                                        stepSize: 1
+                                                    }
+                                                }
+                                            },
+                                            plugins: {
+                                                legend: {
+                                                    position: 'bottom',
+                                                    labels: {
+                                                        padding: 15,
+                                                        font: {
+                                                            size: 12
+                                                        }
+                                                    }
+                                                },
+                                                tooltip: {
+                                                    callbacks: {
+                                                        footer: function(tooltipItems) {
+                                                            let total = 0;
+                                                            tooltipItems.forEach(function(tooltipItem) {
+                                                                total += tooltipItem.parsed.y;
+                                                            });
+                                                            return 'Total: ' + total + ' tasks';
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
                 </text>
             }
         </text>
     }
 </script>
-
-<style>
-    .kpi-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-        .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        }
-
-    .kpi-icon {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .progress-bar.bg-gradient {
-        background: linear-gradient(90deg, #0d6efd 0%, #0dcaf0 100%);
-    }
-
-    .hover-shadow {
-        transition: box-shadow 0.2s;
-    }
-
-        .hover-shadow:hover {
-            box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
-        }
-</style>

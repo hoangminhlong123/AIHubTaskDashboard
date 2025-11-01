@@ -26,6 +26,8 @@ namespace AIHubTaskDashboard.Controllers
 					return RedirectToAction("Login", "Account");
 				}
 
+				_logger.LogInformation("🏠 [DASHBOARD] Loading dashboard...");
+
 				// Fetch all tasks
 				var tasksRes = await _api.GetAsync("api/v1/tasks");
 				JsonElement tasks;
@@ -43,26 +45,54 @@ namespace AIHubTaskDashboard.Controllers
 					}
 				}
 
+				_logger.LogInformation($"✅ [DASHBOARD] Loaded {tasks.GetArrayLength()} tasks");
+
 				// Fetch users
 				JsonElement users;
 				try
 				{
-					var usersRes = await _api.GetAsync("api/v1/users");
-					users = JsonDocument.Parse(usersRes).RootElement;
+					using var httpClient = new HttpClient();
+					var request = HttpContext.Request;
+					var baseUrl = $"{request.Scheme}://{request.Host}/";
+					httpClient.BaseAddress = new Uri(baseUrl);
+					httpClient.Timeout = TimeSpan.FromSeconds(15);
+
+					var response = await httpClient.GetAsync("api/v1/users");
+					var usersRes = await response.Content.ReadAsStringAsync();
+
+					if (response.IsSuccessStatusCode && !string.IsNullOrEmpty(usersRes))
+					{
+						users = JsonDocument.Parse(usersRes).RootElement;
+						_logger.LogInformation($"✅ [DASHBOARD] Loaded {users.GetArrayLength()} users");
+					}
+					else
+					{
+						users = JsonDocument.Parse("[]").RootElement;
+					}
 				}
-				catch
+				catch (Exception ex)
 				{
+					_logger.LogError($"❌ [DASHBOARD] Error loading users: {ex.Message}");
 					users = JsonDocument.Parse("[]").RootElement;
 				}
 
 				// Calculate KPIs
 				var dashboardData = CalculateDashboardKPIs(tasks, users);
 
+				_logger.LogInformation($"📊 [DASHBOARD] KPI Summary:");
+				_logger.LogInformation($"   - Total Tasks: {dashboardData.TotalTasks}");
+				_logger.LogInformation($"   - Completed: {dashboardData.CompletedTasks} ({dashboardData.CompletionRate}%)");
+				_logger.LogInformation($"   - In Progress: {dashboardData.InProgressTasks}");
+				_logger.LogInformation($"   - Overdue: {dashboardData.OverdueTasks}");
+				_logger.LogInformation($"   - Average Progress: {dashboardData.AverageProgress}%");
+				_logger.LogInformation($"   - Team Members: {dashboardData.TasksByAssignee.Count}");
+
 				return View(dashboardData);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"Error loading dashboard: {ex.Message}");
+				_logger.LogError($"❌ [DASHBOARD] Fatal error: {ex.Message}");
+				_logger.LogError($"❌ [DASHBOARD] StackTrace: {ex.StackTrace}");
 				ViewBag.Error = "Không thể tải dữ liệu dashboard.";
 				return View(new DashboardViewModel());
 			}
@@ -74,6 +104,7 @@ namespace AIHubTaskDashboard.Controllers
 
 			if (tasks.ValueKind != JsonValueKind.Array)
 			{
+				_logger.LogWarning("⚠️ [DASHBOARD] Tasks is not an array");
 				return model;
 			}
 
@@ -82,77 +113,138 @@ namespace AIHubTaskDashboard.Controllers
 
 			if (model.TotalTasks == 0)
 			{
+				_logger.LogInformation("ℹ️ [DASHBOARD] No tasks found");
 				return model;
 			}
 
-			// Status breakdown & calculations
-			foreach (var task in tasks.EnumerateArray())
+			// Create user mapping for quick lookup
+			var userMap = new Dictionary<int, string>();
+			if (users.ValueKind == JsonValueKind.Array)
 			{
-				// Status counting
-				if (task.TryGetProperty("status", out var status))
+				foreach (var user in users.EnumerateArray())
 				{
-					var statusValue = status.GetString()?.ToLower() ?? "";
-
-					switch (statusValue)
+					if (user.TryGetProperty("id", out var userId))
 					{
-						case "to do":
-						case "pending":
-							model.PendingTasks++;
-							break;
-						case "in progress":
-							model.InProgressTasks++;
-							break;
-						case "completed":
-						case "done":
-							model.CompletedTasks++;
-							break;
+						var id = userId.GetInt32();
+						var name = user.TryGetProperty("name", out var userName)
+							? userName.GetString()
+							: $"User #{id}";
+
+						if (!userMap.ContainsKey(id))
+						{
+							userMap[id] = name ?? $"User #{id}";
+						}
 					}
 				}
+				_logger.LogInformation($"📋 [DASHBOARD] Mapped {userMap.Count} users");
+			}
 
-				// Calculate average progress
+			// Process each task
+			foreach (var task in tasks.EnumerateArray())
+			{
+				var taskId = task.TryGetProperty("task_id", out var tid) ? tid.GetInt32() : 0;
+
+				// Get task status
+				var status = "";
+				if (task.TryGetProperty("status", out var statusProp))
+				{
+					status = statusProp.GetString()?.ToLower() ?? "";
+				}
+
+				// Count by status
+				switch (status)
+				{
+					case "to do":
+					case "pending":
+						model.PendingTasks++;
+						break;
+					case "in progress":
+						model.InProgressTasks++;
+						break;
+					case "completed":
+					case "done":
+						model.CompletedTasks++;
+						break;
+				}
+
+				// Calculate total progress for average
 				if (task.TryGetProperty("progress_percentage", out var progress))
 				{
 					model.TotalProgress += progress.GetInt32();
 				}
 
-				// Overdue tasks
-				if (task.TryGetProperty("deadline", out var deadline) &&
-					task.TryGetProperty("status", out var taskStatus))
+				// Check if task is overdue
+				var isOverdue = false;
+				if (task.TryGetProperty("deadline", out var deadlineProp) && status != "completed" && status != "done")
 				{
 					try
 					{
-						var deadlineDate = deadline.GetDateTime();
-						var statusValue = taskStatus.GetString()?.ToLower();
-
-						if (deadlineDate < DateTime.UtcNow &&
-							statusValue != "completed" &&
-							statusValue != "done")
+						var deadlineStr = deadlineProp.GetString();
+						if (!string.IsNullOrEmpty(deadlineStr) && DateTime.TryParse(deadlineStr, out var deadline))
 						{
-							model.OverdueTasks++;
+							if (deadline < DateTime.Now)
+							{
+								isOverdue = true;
+								model.OverdueTasks++;
+							}
 						}
 					}
-					catch { }
+					catch (Exception ex)
+					{
+						_logger.LogWarning($"⚠️ [DASHBOARD] Error parsing deadline for task {taskId}: {ex.Message}");
+					}
 				}
 
-				// Tasks by assignee
-				if (task.TryGetProperty("assignee_id", out var assigneeId))
+				// Track tasks by assignee (người được giao)
+				if (task.TryGetProperty("assignee_id", out var assigneeIdProp))
 				{
-					var id = assigneeId.GetInt32();
-					if (id > 0)
+					var assigneeId = assigneeIdProp.GetInt32();
+
+					if (assigneeId > 0)
 					{
-						if (!model.TasksByAssignee.ContainsKey(id))
+						// Initialize assignee stats if not exists
+						if (!model.TasksByAssignee.ContainsKey(assigneeId))
 						{
-							model.TasksByAssignee[id] = new AssigneeTaskStats { AssigneeId = id };
+							var assigneeName = userMap.ContainsKey(assigneeId)
+								? userMap[assigneeId]
+								: $"User #{assigneeId}";
+
+							model.TasksByAssignee[assigneeId] = new AssigneeTaskStats
+							{
+								AssigneeId = assigneeId,
+								AssigneeName = assigneeName
+							};
 						}
-						model.TasksByAssignee[id].TotalTasks++;
 
-						var taskStatusValue = task.TryGetProperty("status", out var st)
-							? st.GetString()?.ToLower()
-							: "";
+						var stats = model.TasksByAssignee[assigneeId];
+						stats.TotalTasks++;
 
-						if (taskStatusValue == "completed" || taskStatusValue == "done")
+						// Count by status for each assignee
+						switch (status)
 						{
-							model.TasksByAssignee[id].CompletedTasks++;
+							case "to do":
+							case "pending":
+								stats.PendingTasks++;
+								break;
+							case "in progress":
+								stats.InProgressTasks++;
+								break;
+							case "completed":
+							case "done":
+								stats.CompletedTasks++;
+								break;
+						}
+
+						// Count overdue tasks for assignee
+						if (isOverdue)
+						{
+							stats.OverdueTasks++;
+						}
+
+						// Add progress for average calculation
+						if (task.TryGetProperty("progress_percentage", out var assigneeProgress))
+						{
+							stats.TotalProgress += assigneeProgress.GetInt32();
 						}
 					}
 				}
@@ -167,47 +259,53 @@ namespace AIHubTaskDashboard.Controllers
 			// Calculate completion rate
 			if (model.TotalTasks > 0)
 			{
-				model.CompletionRate = (int)((double)model.CompletedTasks / model.TotalTasks * 100);
+				model.CompletionRate = (int)Math.Round((double)model.CompletedTasks / model.TotalTasks * 100);
 			}
 
-			// Map assignee names from users
-			if (users.ValueKind == JsonValueKind.Array)
+			// Calculate average progress for each assignee
+			foreach (var assignee in model.TasksByAssignee.Values)
 			{
-				foreach (var user in users.EnumerateArray())
+				if (assignee.TotalTasks > 0)
 				{
-					if (user.TryGetProperty("user_id", out var userId))
-					{
-						var id = userId.GetInt32();
-						if (model.TasksByAssignee.ContainsKey(id) &&
-							user.TryGetProperty("full_name", out var fullName))
-						{
-							model.TasksByAssignee[id].AssigneeName = fullName.GetString() ?? "Unknown";
-						}
-					}
+					assignee.AverageProgress = assignee.TotalProgress / assignee.TotalTasks;
 				}
 			}
 
-			// Recent tasks (last 5) with full task data
+			// Recent tasks (last 5) ordered by created_at
 			model.RecentTasks = tasks.EnumerateArray()
 				.OrderByDescending(t =>
 				{
 					if (t.TryGetProperty("created_at", out var created))
 					{
-						try { return created.GetDateTime(); }
-						catch { return DateTime.MinValue; }
+						try
+						{
+							var createdStr = created.GetString();
+							if (!string.IsNullOrEmpty(createdStr) && DateTime.TryParse(createdStr, out var date))
+							{
+								return date;
+							}
+						}
+						catch { }
 					}
 					return DateTime.MinValue;
 				})
 				.Take(5)
 				.ToList();
 
-			// Top performers (users with highest completion rate, min 2 tasks)
+			// Top performers (minimum 1 task, sorted by completion rate then total completed)
 			model.TopPerformers = model.TasksByAssignee.Values
-				.Where(a => a.TotalTasks >= 2)
+				.Where(a => a.TotalTasks >= 1) // At least 1 task
 				.OrderByDescending(a => a.CompletionRate)
 				.ThenByDescending(a => a.CompletedTasks)
+				.ThenByDescending(a => a.TotalTasks)
 				.Take(3)
 				.ToList();
+
+			_logger.LogInformation($"🏆 [DASHBOARD] Top Performers:");
+			foreach (var performer in model.TopPerformers)
+			{
+				_logger.LogInformation($"   - {performer.AssigneeName}: {performer.CompletedTasks}/{performer.TotalTasks} ({performer.CompletionRate}%)");
+			}
 
 			return model;
 		}
@@ -234,7 +332,16 @@ namespace AIHubTaskDashboard.Controllers
 		public int AssigneeId { get; set; }
 		public string AssigneeName { get; set; } = "Unknown";
 		public int TotalTasks { get; set; }
+		public int PendingTasks { get; set; }
+		public int InProgressTasks { get; set; }
 		public int CompletedTasks { get; set; }
-		public int CompletionRate => TotalTasks > 0 ? (int)((double)CompletedTasks / TotalTasks * 100) : 0;
+		public int OverdueTasks { get; set; }
+		public int TotalProgress { get; set; }
+		public int AverageProgress { get; set; }
+
+		// Completion rate based on completed vs total tasks
+		public int CompletionRate => TotalTasks > 0
+			? (int)Math.Round((double)CompletedTasks / TotalTasks * 100)
+			: 0;
 	}
 }
