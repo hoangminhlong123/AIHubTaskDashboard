@@ -1,8 +1,8 @@
 ﻿@using System.Text.Json
-@model System.Text.Json.JsonElement
+@model JsonElement
 
 @{
-    ViewBag.Title = "Chỉnh sửa Task";
+    ViewBag.Title = "Edit Task";
     var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
     var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
 

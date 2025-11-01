@@ -1,5 +1,7 @@
 ﻿using AIHubTaskDashboard.Services;
 using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using AIHubTaskDashboard.ViewModel;
 using System.Text.Json;
 
 namespace AIHubTaskDashboard.Controllers

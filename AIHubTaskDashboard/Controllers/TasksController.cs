@@ -164,10 +164,17 @@ namespace AIHubTaskDashboard.Controllers
 				string endpoint = "api/v1/tasks";
 				var query = new List<string>();
 
-				if (assignee_id.HasValue && assignee_id.Value != 0)
-				{
-					query.Add($"assignee_id={assignee_id.Value}");
-				}
+                JsonElement tasks;
+                if (string.IsNullOrWhiteSpace(res))
+                {
+                    tasks = JsonDocument.Parse("[]").RootElement;
+                }
+                else
+                {
+                    tasks = JsonDocument.Parse(res).RootElement;
+                    if (tasks.ValueKind != JsonValueKind.Array)
+                        tasks = JsonDocument.Parse($"[{res}]").RootElement;
+                }
 
 				if (assigner_id.HasValue && assigner_id.Value != 0)
 				{
@@ -179,24 +186,20 @@ namespace AIHubTaskDashboard.Controllers
 					query.Add($"status={status}");
 				}
 
-				if (query.Count > 0)
-					endpoint += "?" + string.Join("&", query);
+                if (assignee_id.HasValue && assignee_id.Value != 0)
+                    taskList = taskList.Where(t => t.TryGetProperty("assignee_id", out var a) && a.GetInt32() == assignee_id.Value).ToList();
 
 				_logger.LogInformation($"🔍 [INDEX] Fetching tasks with filters: {endpoint}");
 
 				var res = await _api.GetAsync(endpoint);
 
-				JsonElement tasks;
-				if (string.IsNullOrWhiteSpace(res))
-				{
-					tasks = JsonDocument.Parse("[]").RootElement;
-				}
-				else
-				{
-					tasks = JsonDocument.Parse(res).RootElement;
-					if (tasks.ValueKind != JsonValueKind.Array)
-						tasks = JsonDocument.Parse($"[{res}]").RootElement;
-				}
+                var pagedTasks = taskList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.PageSize = pageSize;
+                var usersRes = await _api.GetAsync("api/v1/members");
+                var usersJson = JsonDocument.Parse(string.IsNullOrWhiteSpace(usersRes) ? "[]" : usersRes).RootElement;
+                ViewBag.Users = usersJson;
 
 				// Client-side filtering for assigner_id
 				if (assigner_id.HasValue && assigner_id.Value != 0 && tasks.ValueKind == JsonValueKind.Array)
@@ -350,7 +353,8 @@ namespace AIHubTaskDashboard.Controllers
 			}
 		}
 
-		[HttpGet]
+
+        [HttpGet]
 		public async Task<IActionResult> Create()
 		{
 			try
