@@ -36,44 +36,227 @@ namespace AIHubTaskDashboard.Services
 		// =============================
 		// 🎯 MAIN: Xử lý Webhook Events
 		// =============================
+		// =============================
+		// 🎯 MAIN: Xử lý Webhook Events
+		// =============================
 		public async Task HandleWebhookEventAsync(string eventType, JsonElement payload)
 		{
 			try
 			{
-				_logger.LogInformation($"🔄 Processing event: {eventType}");
-				_logger.LogInformation($"📦 Full payload: {payload}");
+				_logger.LogInformation($"🔄 [WEBHOOK] Processing event: {eventType}");
+				_logger.LogInformation($"📦 [WEBHOOK] Full payload: {payload}");
 
 				switch (eventType)
 				{
 					case "taskCreated":
-						// 🔥 DISABLE taskCreated để tránh duplicate
-						// Task sẽ được tạo từ Dashboard → ClickUp, không cần sync ngược lại
-						_logger.LogInformation("⚠️ [SKIP] taskCreated event ignored to prevent duplicates");
-						_logger.LogInformation("💡 Tasks should be created from Dashboard, not ClickUp");
+						_logger.LogInformation("📋 [WEBHOOK] Handling taskCreated event");
+						await HandleTaskCreatedSmart(payload);
 						break;
 
 					case "taskUpdated":
+						_logger.LogInformation("📋 [WEBHOOK] Handling taskUpdated event");
 						await HandleTaskUpdated(payload);
 						break;
 					case "taskDeleted":
+						_logger.LogInformation("📋 [WEBHOOK] Handling taskDeleted event");
 						await HandleTaskDeleted(payload);
 						break;
 					case "taskStatusUpdated":
+						_logger.LogInformation("📋 [WEBHOOK] Handling taskStatusUpdated event");
 						await HandleTaskStatusUpdated(payload);
 						break;
 					case "taskAssigneeUpdated":
+						_logger.LogInformation("📋 [WEBHOOK] Handling taskAssigneeUpdated event");
 						await HandleTaskAssigneeUpdated(payload);
 						break;
 					default:
-						_logger.LogWarning($"⚠️ Unhandled event type: {eventType}");
+						_logger.LogWarning($"⚠️ [WEBHOOK] Unhandled event type: {eventType}");
 						break;
 				}
+
+				_logger.LogInformation($"✅ [WEBHOOK] Finished processing: {eventType}");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Error handling {eventType}: {ex.Message}");
-				_logger.LogError($"❌ StackTrace: {ex.StackTrace}");
+				_logger.LogError($"❌ [WEBHOOK] Error handling {eventType}: {ex.Message}");
+				_logger.LogError($"❌ [WEBHOOK] StackTrace: {ex.StackTrace}");
 				throw;
+			}
+		}
+
+		// =============================
+		// 🔥 NEW: Smart Task Created Handler
+		// =============================
+		private async Task HandleTaskCreatedSmart(JsonElement payload)
+		{
+			try
+			{
+				_logger.LogInformation("🔍 [SMART] HandleTaskCreated: Start");
+
+				var taskId = GetPropertySafe(payload, "task_id");
+
+				if (string.IsNullOrEmpty(taskId))
+				{
+					_logger.LogWarning("⚠️ taskCreated: Missing 'task_id'");
+					return;
+				}
+
+				_logger.LogInformation($"📌 Task ID from webhook: {taskId}");
+
+				// 🔥 STEP 1: Wait a bit for TasksController to finish (if it was Dashboard-created)
+				await Task.Delay(2000); // 2 seconds delay
+
+				// 🔥 STEP 2: Check if task already exists
+				var existingTaskJson = await TryGetExistingTask(taskId);
+
+				if (existingTaskJson != null)
+				{
+					_logger.LogInformation($"✅ [SMART] Task already exists in Dashboard: {taskId}");
+					_logger.LogInformation($"💡 This was created by Dashboard → ClickUp, webhook sync not needed");
+					return;
+				}
+
+				// 🔥 STEP 3: Check for recent placeholder (within 10 seconds)
+				var placeholderCheck = await CheckForRecentPlaceholder(taskId);
+				if (placeholderCheck != null)
+				{
+					_logger.LogInformation($"🔄 [SMART] Found recent placeholder, updating instead of creating");
+
+					var placeholderTask = JsonDocument.Parse(placeholderCheck).RootElement;
+					var dbTaskId = placeholderTask.GetProperty("task_id").GetInt32();
+
+					var taskDetails = await FetchTaskFromClickUp(taskId);
+					if (taskDetails == null)
+					{
+						_logger.LogError($"❌ Cannot fetch task details from ClickUp: {taskId}");
+						return;
+					}
+
+					var task = JsonDocument.Parse(taskDetails).RootElement;
+					var assigneeId = await MapClickUpAssigneeToDashboard(task);
+
+					var updatePayload = new
+					{
+						clickup_id = taskId,
+						status = MapClickUpStatus(GetNestedPropertySafe(task, "status", "status")),
+						progress_percentage = CalculateProgress(GetNestedPropertySafe(task, "status", "status")),
+						assignee_id = assigneeId
+					};
+
+					await _apiClient.PutAsync($"api/v1/tasks/{dbTaskId}", updatePayload);
+					_logger.LogInformation($"✅ [SMART] Updated placeholder with real ClickUp ID: {taskId}");
+					return;
+				}
+
+				// 🔥 STEP 4: This is a REAL ClickUp-only creation (created directly in ClickUp UI)
+				_logger.LogInformation($"🆕 [SMART] This is a NEW task created directly in ClickUp");
+				_logger.LogInformation($"🔄 [SMART] Syncing to Dashboard...");
+
+				var taskDetails2 = await FetchTaskFromClickUp(taskId);
+
+				if (taskDetails2 == null)
+				{
+					_logger.LogError($"❌ Cannot fetch task details from ClickUp: {taskId}");
+					return;
+				}
+
+				var task2 = JsonDocument.Parse(taskDetails2).RootElement;
+				var taskName = GetPropertySafe(task2, "name");
+				var status = GetNestedPropertySafe(task2, "status", "status");
+				var dueDate = GetPropertySafe(task2, "due_date");
+				var url = GetPropertySafe(task2, "url");
+				var description = GetPropertySafe(task2, "description");
+				var assigneeId2 = await MapClickUpAssigneeToDashboard(task2);
+
+				_logger.LogInformation($"✅ Syncing ClickUp task: {taskName} ({taskId})");
+
+				var dashboardPayload = new
+				{
+					clickup_id = taskId,
+					title = taskName,
+					description = string.IsNullOrEmpty(description) ? $"Synced from ClickUp - Status: {status}" : description,
+					status = MapClickUpStatus(status),
+					progress_percentage = CalculateProgress(status),
+					assignee_id = assigneeId2,
+					assigner_id = assigneeId2,
+					collaborators = new List<int> { assigneeId2 },
+					expected_output = "Auto-synced from ClickUp",
+					deadline = ParseClickUpDate(dueDate),
+					notion_link = url
+				};
+
+				_logger.LogInformation($"📤 [SMART] Creating in Dashboard with assignee_id={assigneeId2}");
+				await _apiClient.PostAsync("api/v1/tasks", dashboardPayload);
+				_logger.LogInformation($"✅ [SMART] Successfully synced ClickUp task to Dashboard: {taskId}");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ [SMART] HandleTaskCreatedSmart error: {ex.Message}");
+				_logger.LogError($"❌ [SMART] StackTrace: {ex.StackTrace}");
+			}
+		}
+
+// 🔥 IMPROVED: Check for Recent Placeholder (10 seconds window)
+// =============================
+private async Task<string?> CheckForRecentPlaceholder(string clickupId)
+		{
+			try
+			{
+				_logger.LogInformation($"🔍 [PLACEHOLDER] Checking for recent placeholder tasks...");
+
+				var response = await _apiClient.GetAsync("api/v1/tasks");
+
+				if (string.IsNullOrEmpty(response))
+				{
+					_logger.LogInformation("⚠️ [PLACEHOLDER] No tasks response from API");
+					return null;
+				}
+
+				var tasks = JsonDocument.Parse(response).RootElement;
+
+				if (tasks.ValueKind != JsonValueKind.Array)
+				{
+					_logger.LogWarning("⚠️ [PLACEHOLDER] Response is not an array");
+					return null;
+				}
+
+				var now = DateTime.UtcNow;
+
+				foreach (var task in tasks.EnumerateArray())
+				{
+					if (!task.TryGetProperty("clickup_id", out var existingClickupId))
+						continue;
+
+					var existingId = existingClickupId.GetString();
+
+					// Check if this is a PENDING placeholder
+					if (string.IsNullOrEmpty(existingId) || !existingId.StartsWith("PENDING_"))
+						continue;
+
+					// Check if created recently (within 10 seconds)
+					if (task.TryGetProperty("created_at", out var createdAtProp))
+					{
+						var createdAtStr = createdAtProp.GetString();
+						if (DateTime.TryParse(createdAtStr, out var createdAt))
+						{
+							var age = (now - createdAt).TotalSeconds;
+
+							if (age < 10) // Only 10 seconds window
+							{
+								_logger.LogInformation($"✅ [PLACEHOLDER] Found recent placeholder: {existingId} (age: {age:F1}s)");
+								return task.ToString();
+							}
+						}
+					}
+				}
+
+				_logger.LogInformation("⚠️ [PLACEHOLDER] No recent placeholder task found");
+				return null;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ [PLACEHOLDER] CheckForRecentPlaceholder error: {ex.Message}");
+				return null;
 			}
 		}
 
@@ -139,120 +322,120 @@ namespace AIHubTaskDashboard.Services
 		//// =============================
 		//// 📥 Task Created - FIXED với Duplicate Prevention
 		//// =============================
-		//private async Task HandleTaskCreated(JsonElement payload)
-		//{
-		//	try
-		//	{
-		//		_logger.LogInformation("🔍 HandleTaskCreated: Start");
+		private async Task HandleTaskCreated(JsonElement payload)
+		{
+			try
+			{
+				_logger.LogInformation("🔍 HandleTaskCreated: Start");
 
-		//		var taskId = GetPropertySafe(payload, "task_id");
+				var taskId = GetPropertySafe(payload, "task_id");
 
-		//		if (string.IsNullOrEmpty(taskId))
-		//		{
-		//			_logger.LogWarning("⚠️ taskCreated: Missing 'task_id'");
-		//			return;
-		//		}
+				if (string.IsNullOrEmpty(taskId))
+				{
+					_logger.LogWarning("⚠️ taskCreated: Missing 'task_id'");
+					return;
+				}
 
-		//		_logger.LogInformation($"📌 Task ID from webhook: {taskId}");
+				_logger.LogInformation($"📌 Task ID from webhook: {taskId}");
 
-		//		// 🔥 STEP 1: CHECK IF TASK ALREADY EXISTS (INCLUDING EXACT MATCH)
-		//		var existingTaskJson = await TryGetExistingTask(taskId);
+				// 🔥 STEP 1: CHECK IF TASK ALREADY EXISTS (INCLUDING EXACT MATCH)
+				var existingTaskJson = await TryGetExistingTask(taskId);
 
-		//		if (existingTaskJson != null)
-		//		{
-		//			_logger.LogWarning($"⚠️ [DUPLICATE PREVENTED] Task already exists in Dashboard: {taskId}");
-		//			_logger.LogWarning($"⚠️ This is likely created by TasksController, skipping webhook creation");
-		//			return; // 🔥 STOP HERE - Don't create duplicate
-		//		}
+				if (existingTaskJson != null)
+				{
+					_logger.LogWarning($"⚠️ [DUPLICATE PREVENTED] Task already exists in Dashboard: {taskId}");
+					_logger.LogWarning($"⚠️ This is likely created by TasksController, skipping webhook creation");
+					return; // 🔥 STOP HERE - Don't create duplicate
+				}
 
-		//		// 🔥 STEP 2: CHECK FOR PLACEHOLDER TASKS (PENDING_*)
-		//		// Webhook might arrive before TasksController updates the placeholder
-		//		var placeholderCheck = await CheckForPlaceholderTask(taskId);
-		//		if (placeholderCheck != null)
-		//		{
-		//			_logger.LogWarning($"⚠️ [DUPLICATE PREVENTED] Found placeholder task waiting for this clickup_id");
+				// 🔥 STEP 2: CHECK FOR PLACEHOLDER TASKS (PENDING_*)
+				// Webhook might arrive before TasksController updates the placeholder
+				var placeholderCheck = await CheckForPlaceholderTask(taskId);
+				if (placeholderCheck != null)
+				{
+					_logger.LogWarning($"⚠️ [DUPLICATE PREVENTED] Found placeholder task waiting for this clickup_id");
 
-		//			// Update the placeholder instead of creating new
-		//			var placeholderTask = JsonDocument.Parse(placeholderCheck).RootElement;
-		//			var dbTaskId = placeholderTask.GetProperty("task_id").GetInt32();
+					// Update the placeholder instead of creating new
+					var placeholderTask = JsonDocument.Parse(placeholderCheck).RootElement;
+					var dbTaskId = placeholderTask.GetProperty("task_id").GetInt32();
 
-		//			_logger.LogInformation($"🔄 Updating placeholder task {dbTaskId} with webhook data");
+					_logger.LogInformation($"🔄 Updating placeholder task {dbTaskId} with webhook data");
 
-		//			// Fetch full task details from ClickUp
-		//			var taskDetails = await FetchTaskFromClickUp(taskId);
-		//			if (taskDetails == null)
-		//			{
-		//				_logger.LogError($"❌ Cannot fetch task details from ClickUp: {taskId}");
-		//				return;
-		//			}
+					// Fetch full task details from ClickUp
+					var taskDetails = await FetchTaskFromClickUp(taskId);
+					if (taskDetails == null)
+					{
+						_logger.LogError($"❌ Cannot fetch task details from ClickUp: {taskId}");
+						return;
+					}
 
-		//			var task = JsonDocument.Parse(taskDetails).RootElement;
-		//			var assigneeId = await MapClickUpAssigneeToDashboard(task);
+					var task = JsonDocument.Parse(taskDetails).RootElement;
+					var assigneeId = await MapClickUpAssigneeToDashboard(task);
 
-		//			var updatePayload = new
-		//			{
-		//				clickup_id = taskId, // Replace PENDING_* with real ID
-		//				status = MapClickUpStatus(GetNestedPropertySafe(task, "status", "status")),
-		//				progress_percentage = CalculateProgress(GetNestedPropertySafe(task, "status", "status")),
-		//				assignee_id = assigneeId
-		//			};
+					var updatePayload = new
+					{
+						clickup_id = taskId, // Replace PENDING_* with real ID
+						status = MapClickUpStatus(GetNestedPropertySafe(task, "status", "status")),
+						progress_percentage = CalculateProgress(GetNestedPropertySafe(task, "status", "status")),
+						assignee_id = assigneeId
+					};
 
-		//			await _apiClient.PutAsync($"api/v1/tasks/{dbTaskId}", updatePayload);
-		//			_logger.LogInformation($"✅ Updated placeholder task with webhook data: {taskId}");
-		//			return;
-		//		}
+					await _apiClient.PutAsync($"api/v1/tasks/{dbTaskId}", updatePayload);
+					_logger.LogInformation($"✅ Updated placeholder task with webhook data: {taskId}");
+					return;
+				}
 
-		//		// 🔥 STEP 3: If no existing task, create new one (this is a REAL webhook-only creation)
-		//		_logger.LogInformation($"✅ No existing task found, creating new from webhook");
+				// 🔥 STEP 3: If no existing task, create new one (this is a REAL webhook-only creation)
+				_logger.LogInformation($"✅ No existing task found, creating new from webhook");
 
-		//		var taskDetails2 = await FetchTaskFromClickUp(taskId);
+				var taskDetails2 = await FetchTaskFromClickUp(taskId);
 
-		//		if (taskDetails2 == null)
-		//		{
-		//			_logger.LogError($"❌ Cannot fetch task details from ClickUp: {taskId}");
-		//			return;
-		//		}
+				if (taskDetails2 == null)
+				{
+					_logger.LogError($"❌ Cannot fetch task details from ClickUp: {taskId}");
+					return;
+				}
 
-		//		_logger.LogInformation($"✅ Fetched task details: {taskDetails2}");
+				_logger.LogInformation($"✅ Fetched task details: {taskDetails2}");
 
-		//		var task2 = JsonDocument.Parse(taskDetails2).RootElement;
-		//		var taskName = GetPropertySafe(task2, "name");
-		//		var status = GetNestedPropertySafe(task2, "status", "status");
-		//		var dueDate = GetPropertySafe(task2, "due_date");
-		//		var url = GetPropertySafe(task2, "url");
-		//		var description = GetPropertySafe(task2, "description");
+				var task2 = JsonDocument.Parse(taskDetails2).RootElement;
+				var taskName = GetPropertySafe(task2, "name");
+				var status = GetNestedPropertySafe(task2, "status", "status");
+				var dueDate = GetPropertySafe(task2, "due_date");
+				var url = GetPropertySafe(task2, "url");
+				var description = GetPropertySafe(task2, "description");
 
-		//		// 🔥 Map assignee từ ClickUp sang Dashboard
-		//		var assigneeId2 = await MapClickUpAssigneeToDashboard(task2);
+				// 🔥 Map assignee từ ClickUp sang Dashboard
+				var assigneeId2 = await MapClickUpAssigneeToDashboard(task2);
 
-		//		_logger.LogInformation($"✅ Task created: {taskName} ({taskId}) | Status: {status} | Assignee: {assigneeId2}");
+				_logger.LogInformation($"✅ Task created: {taskName} ({taskId}) | Status: {status} | Assignee: {assigneeId2}");
 
-		//		// Prepare payload for Dashboard API
-		//		var dashboardPayload = new
-		//		{
-		//			clickup_id = taskId,
-		//			title = taskName,
-		//			description = string.IsNullOrEmpty(description) ? $"Synced from ClickUp - Status: {status}" : description,
-		//			status = MapClickUpStatus(status),
-		//			progress_percentage = CalculateProgress(status),
-		//			assignee_id = assigneeId2,
-		//			assigner_id = assigneeId2,
-		//			collaborators = new List<int> { assigneeId2 },
-		//			expected_output = "Auto-synced from ClickUp",
-		//			deadline = ParseClickUpDate(dueDate),
-		//			notion_link = url
-		//		};
+				// Prepare payload for Dashboard API
+				var dashboardPayload = new
+				{
+					clickup_id = taskId,
+					title = taskName,
+					description = string.IsNullOrEmpty(description) ? $"Synced from ClickUp - Status: {status}" : description,
+					status = MapClickUpStatus(status),
+					progress_percentage = CalculateProgress(status),
+					assignee_id = assigneeId2,
+					assigner_id = assigneeId2,
+					collaborators = new List<int> { assigneeId2 },
+					expected_output = "Auto-synced from ClickUp",
+					deadline = ParseClickUpDate(dueDate),
+					notion_link = url
+				};
 
-		//		_logger.LogInformation($"📤 Sending sync request to Dashboard API with assignee_id={assigneeId2}");
-		//		await _apiClient.PostAsync("api/v1/tasks", dashboardPayload);
-		//		_logger.LogInformation($"✅ Successfully synced to Dashboard: {taskId}");
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		_logger.LogError($"❌ HandleTaskCreated error: {ex.Message}");
-		//		_logger.LogError($"❌ StackTrace: {ex.StackTrace}");
-		//	}
-		//}
+				_logger.LogInformation($"📤 Sending sync request to Dashboard API with assignee_id={assigneeId2}");
+				await _apiClient.PostAsync("api/v1/tasks", dashboardPayload);
+				_logger.LogInformation($"✅ Successfully synced to Dashboard: {taskId}");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ HandleTaskCreated error: {ex.Message}");
+				_logger.LogError($"❌ StackTrace: {ex.StackTrace}");
+			}
+		}
 
 		// =============================
 		// 🔄 Task Updated - KEEP THIS
