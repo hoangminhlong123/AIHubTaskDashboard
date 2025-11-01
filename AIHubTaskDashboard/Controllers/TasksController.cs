@@ -164,42 +164,47 @@ namespace AIHubTaskDashboard.Controllers
 				string endpoint = "api/v1/tasks";
 				var query = new List<string>();
 
-                JsonElement tasks;
-                if (string.IsNullOrWhiteSpace(res))
-                {
-                    tasks = JsonDocument.Parse("[]").RootElement;
-                }
-                else
-                {
-                    tasks = JsonDocument.Parse(res).RootElement;
-                    if (tasks.ValueKind != JsonValueKind.Array)
-                        tasks = JsonDocument.Parse($"[{res}]").RootElement;
-                }
-
-				if (assigner_id.HasValue && assigner_id.Value != 0)
-				{
-					query.Add($"assigner_id={assigner_id.Value}");
-				}
-
+				// Build query parameters
 				if (!string.IsNullOrEmpty(status))
 				{
 					query.Add($"status={status}");
 				}
 
-                if (assignee_id.HasValue && assignee_id.Value != 0)
-                    taskList = taskList.Where(t => t.TryGetProperty("assignee_id", out var a) && a.GetInt32() == assignee_id.Value).ToList();
+				if (query.Count > 0)
+				{
+					endpoint += "?" + string.Join("&", query);
+				}
 
 				_logger.LogInformation($"🔍 [INDEX] Fetching tasks with filters: {endpoint}");
 
+				// Fetch tasks from API
 				var res = await _api.GetAsync(endpoint);
 
-                var pagedTasks = taskList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-                ViewBag.CurrentPage = page;
-                ViewBag.TotalPages = totalPages;
-                ViewBag.PageSize = pageSize;
-                var usersRes = await _api.GetAsync("api/v1/members");
-                var usersJson = JsonDocument.Parse(string.IsNullOrWhiteSpace(usersRes) ? "[]" : usersRes).RootElement;
-                ViewBag.Users = usersJson;
+				JsonElement tasks;
+				if (string.IsNullOrWhiteSpace(res))
+				{
+					tasks = JsonDocument.Parse("[]").RootElement;
+				}
+				else
+				{
+					tasks = JsonDocument.Parse(res).RootElement;
+					if (tasks.ValueKind != JsonValueKind.Array)
+						tasks = JsonDocument.Parse($"[{res}]").RootElement;
+				}
+
+				// Client-side filtering for assignee_id
+				if (assignee_id.HasValue && assignee_id.Value != 0 && tasks.ValueKind == JsonValueKind.Array)
+				{
+					var filteredTasks = tasks.EnumerateArray()
+						.Where(t => t.TryGetProperty("assignee_id", out var a) && a.GetInt32() == assignee_id.Value)
+						.ToList();
+
+					if (filteredTasks.Count != tasks.GetArrayLength())
+					{
+						_logger.LogInformation($"🔍 [INDEX] Client-side filter by assignee_id={assignee_id}: {tasks.GetArrayLength()} -> {filteredTasks.Count} tasks");
+						tasks = JsonDocument.Parse(System.Text.Json.JsonSerializer.Serialize(filteredTasks)).RootElement;
+					}
+				}
 
 				// Client-side filtering for assigner_id
 				if (assigner_id.HasValue && assigner_id.Value != 0 && tasks.ValueKind == JsonValueKind.Array)
@@ -354,7 +359,7 @@ namespace AIHubTaskDashboard.Controllers
 		}
 
 
-        [HttpGet]
+		[HttpGet]
 		public async Task<IActionResult> Create()
 		{
 			try

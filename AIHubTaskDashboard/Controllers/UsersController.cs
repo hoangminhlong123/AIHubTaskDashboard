@@ -192,7 +192,7 @@ namespace AIHubTaskDashboard.Controllers
 			}
 		}
 
-		// 🔥 HELPER: Lấy users từ ClickUp Team
+		// 🔥 HELPER: Lấy users từ ClickUp Team VÀ AUTO-SYNC VÀO BACKEND
 		private async Task<List<object>?> GetUsersFromClickUp()
 		{
 			try
@@ -219,8 +219,8 @@ namespace AIHubTaskDashboard.Controllers
 				var members = team.GetProperty("members");
 
 				var users = new List<object>();
-				int dashboardUserId = 1; // Counter cho dashboard user ID
 
+				// 🔥 AUTO-SYNC VÀO BACKEND DATABASE
 				foreach (var member in members.EnumerateArray())
 				{
 					var user = member.GetProperty("user");
@@ -242,26 +242,160 @@ namespace AIHubTaskDashboard.Controllers
 						? (emailProp.GetString() ?? $"{username.ToLower().Replace(" ", "")}@charm.contact")
 						: $"{username.ToLower().Replace(" ", "")}@charm.contact";
 
-					// 🔥 Tạo user object cho Dashboard với clickup_id
+					_logger.LogInformation($"   👤 {username} | Email: {email} | ClickUp ID: {clickUpId}");
+
+					// 🔥 SYNC VÀO BACKEND (CREATE OR UPDATE)
+					var backendUserId = await EnsureUserExistsInBackend(username, email, clickUpId);
+
+					// 🔥 THÊM VÀO DANH SÁCH VỚI ID TỪ BACKEND
 					users.Add(new
 					{
-						id = dashboardUserId++,
+						id = backendUserId, // 🔥 DÙNG ID TỪ BACKEND, KHÔNG TỰ ĐẾM
 						name = username,
 						email = email,
 						username = username,
-						clickup_id = clickUpId  // 🔥 QUAN TRỌNG: Field này để mapping
+						clickup_id = clickUpId
 					});
-
-					_logger.LogInformation($"   👤 {username} | Email: {email} | ClickUp ID: {clickUpId}");
 				}
 
-				_logger.LogInformation($"✅ [USERS] Successfully fetched {users.Count} users from ClickUp");
+				_logger.LogInformation($"✅ [USERS] Successfully fetched and synced {users.Count} users");
 				return users;
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError($"❌ [USERS] GetUsersFromClickUp error: {ex.Message}");
 				_logger.LogError($"   StackTrace: {ex.StackTrace}");
+				return null;
+			}
+		}
+
+		// 🔥 THÊM 2 HELPER METHODS MỚI (THÊM VÀO CUỐI CLASS)
+
+		/// <summary>
+		/// Đảm bảo user tồn tại trong backend database, trả về user ID
+		/// </summary>
+		private async Task<int> EnsureUserExistsInBackend(string name, string email, string clickUpId)
+		{
+			try
+			{
+				// 1. Kiểm tra user đã tồn tại chưa
+				var existingUser = await TryGetUserByClickUpId(clickUpId);
+
+				if (existingUser.HasValue)
+				{
+					var userId = existingUser.Value.GetProperty("id").GetInt32();
+					_logger.LogDebug($"✅ [SYNC] User already exists: {name} (ID={userId})");
+					return userId;
+				}
+
+				// 2. Thử tìm bằng email
+				existingUser = await TryGetUserByEmail(email);
+				if (existingUser.HasValue)
+				{
+					var userId = existingUser.Value.GetProperty("id").GetInt32();
+					_logger.LogInformation($"✅ [SYNC] User found by email: {name} (ID={userId})");
+
+					// Update clickup_id nếu chưa có
+					try
+					{
+						await _api.PutAsync($"api/v1/users/{userId}", new { clickup_id = clickUpId });
+						_logger.LogInformation($"✅ [SYNC] Updated clickup_id for user {userId}");
+					}
+					catch { }
+
+					return userId;
+				}
+
+				// 3. Tạo mới user
+				_logger.LogInformation($"🔄 [SYNC] Creating new user in backend: {name}");
+
+				var payload = new
+				{
+					name = name,
+					email = email,
+					password = "ClickUpSync123!",
+					clickup_id = clickUpId
+				};
+
+				var result = await _api.PostAsync("api/v1/users", payload);
+
+				if (!string.IsNullOrEmpty(result))
+				{
+					var createdUser = JsonDocument.Parse(result).RootElement;
+					var newUserId = createdUser.GetProperty("id").GetInt32();
+					_logger.LogInformation($"✅ [SYNC] User created: {name} (ID={newUserId})");
+					return newUserId;
+				}
+
+				// Fallback: return 1 nếu tạo thất bại
+				_logger.LogWarning($"⚠️ [SYNC] Failed to create user, using fallback ID=1");
+				return 1;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ [SYNC] EnsureUserExistsInBackend error: {ex.Message}");
+				return 1;
+			}
+		}
+
+		/// <summary>
+		/// Tìm user trong backend bằng clickup_id
+		/// </summary>
+		private async Task<JsonElement?> TryGetUserByClickUpId(string clickUpId)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(clickUpId))
+					return null;
+
+				var response = await _api.GetAsync($"api/v1/users?clickup_id={clickUpId}");
+
+				if (!string.IsNullOrEmpty(response))
+				{
+					var result = JsonDocument.Parse(response).RootElement;
+
+					if (result.ValueKind == JsonValueKind.Array && result.GetArrayLength() > 0)
+						return result[0];
+
+					if (result.ValueKind == JsonValueKind.Object && result.TryGetProperty("id", out _))
+						return result;
+				}
+
+				return null;
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Tìm user trong backend bằng email
+		/// </summary>
+		private async Task<JsonElement?> TryGetUserByEmail(string email)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(email))
+					return null;
+
+				var response = await _api.GetAsync($"api/v1/users?email={Uri.EscapeDataString(email)}");
+
+				if (!string.IsNullOrEmpty(response))
+				{
+					var result = JsonDocument.Parse(response).RootElement;
+
+					if (result.ValueKind == JsonValueKind.Array && result.GetArrayLength() > 0)
+						return result[0];
+
+					if (result.ValueKind == JsonValueKind.Object && result.TryGetProperty("id", out _))
+						return result;
+				}
+
+				return null;
+			}
+			catch
+			{
 				return null;
 			}
 		}

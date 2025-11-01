@@ -36,6 +36,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "TestCreate",
+    "RelativePath": "api/clickup-webhook/test-create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "AIHubTaskDashboard.Controllers.DebugController",
     "Method": "Health",
     "RelativePath": "api/debug/health",
@@ -95,6 +105,22 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHUBOS.Dashboard.Controllers.TelegramController",
+    "Method": "SendLog",
+    "RelativePath": "api/telegram/log",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "AIHubTaskDashboard.DTOS.TelegramLogDto",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
