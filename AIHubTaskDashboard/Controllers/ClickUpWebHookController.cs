@@ -20,7 +20,7 @@ namespace AIHubTaskDashboard.Controllers
 		}
 
 		/// <summary>
-		/// Endpoint nhận webhook từ ClickUp
+		/// Nhận webhook từ ClickUp
 		/// </summary>
 		[HttpPost]
 		public async Task<IActionResult> HandleWebhook([FromBody] JsonElement payload)
@@ -30,7 +30,6 @@ namespace AIHubTaskDashboard.Controllers
 				_logger.LogInformation($"📩 Webhook received at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
 				_logger.LogInformation($"📩 Payload: {payload}");
 
-				// Lấy event type
 				if (!payload.TryGetProperty("event", out var eventProp))
 				{
 					_logger.LogWarning("⚠️ No 'event' property in webhook payload");
@@ -40,7 +39,6 @@ namespace AIHubTaskDashboard.Controllers
 				var eventType = eventProp.GetString();
 				_logger.LogInformation($"📩 Event type: {eventType}");
 
-				// Xử lý event
 				await _clickUpService.HandleWebhookEventAsync(eventType, payload);
 
 				return Ok(new { success = true, message = "Webhook processed", eventType });
@@ -54,7 +52,7 @@ namespace AIHubTaskDashboard.Controllers
 		}
 
 		/// <summary>
-		/// Test endpoint để verify webhook hoạt động
+		/// Endpoint kiểm tra hoạt động webhook
 		/// </summary>
 		[HttpGet("test")]
 		public IActionResult Test()

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "MHo30w+94dVyUd/oNo1eeseIGRc5TsqwpXkQq/ltCtc=",
+  "Hash": "OSZtQi59kLfqzGYCIK7HEV+/0BGFWVtANsp8ddRBvLM=",
   "Source": "AIHubTaskDashboard",
   "BasePath": "_content/AIHubTaskDashboard",
   "Mode": "Default",
@@ -59,7 +59,70 @@
       "OriginalItemSpec": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AIHubTaskDashboard.bundle.scp.css"
     },
     {
-      "Identity": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\site.css",
+      "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
+      "SourceId": "AIHubTaskDashboard",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\",
+      "BasePath": "_content/AIHubTaskDashboard",
+      "RelativePath": "css/dashboard-luxury#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "wb2y2f2z19",
+      "Integrity": "tAGvFDzZmAzl5+L9lH2CQg9W+pvrkTpyFJ06RrCDc9E=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\dashboard-luxury.css"
+    },
+    {
+      "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\index-list.css",
+      "SourceId": "AIHubTaskDashboard",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\",
+      "BasePath": "_content/AIHubTaskDashboard",
+      "RelativePath": "css/index-list#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "5xvpf4tn4o",
+      "Integrity": "JwNy4P4Ah8fz7eFMKa8REOoeJiELxe6ba2dkq7zc194=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\index-list.css"
+    },
+    {
+      "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
+      "SourceId": "AIHubTaskDashboard",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\",
+      "BasePath": "_content/AIHubTaskDashboard",
+      "RelativePath": "css/lux_layout#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "h4myl9hqdi",
+      "Integrity": "f9JVPCY+1R2TfH0p+mnSTodl/cboafYbbTwpxfEcwaw=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\lux_layout.css"
+    },
+    {
+      "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\site.css",
       "SourceId": "AIHubTaskDashboard",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\",
@@ -80,7 +143,28 @@
       "OriginalItemSpec": "wwwroot\\css\\site.css"
     },
     {
-      "Identity": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\favicon.ico",
+      "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\tasks-luxury.css",
+      "SourceId": "AIHubTaskDashboard",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\",
+      "BasePath": "_content/AIHubTaskDashboard",
+      "RelativePath": "css/tasks-luxury#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "u3caexps6f",
+      "Integrity": "NiJJ3OmZmQa8woQXhPypep1rR6LFeroEoA7Mi+Q5DIs=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\tasks-luxury.css"
+    },
+    {
+      "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\favicon.ico",
       "SourceId": "AIHubTaskDashboard",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\",
@@ -1485,6 +1569,252 @@
       ]
     },
     {
+      "Route": "css/dashboard-luxury.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "14092"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"tAGvFDzZmAzl5+L9lH2CQg9W+pvrkTpyFJ06RrCDc9E=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:47:20 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-tAGvFDzZmAzl5+L9lH2CQg9W+pvrkTpyFJ06RrCDc9E="
+        }
+      ]
+    },
+    {
+      "Route": "css/dashboard-luxury.wb2y2f2z19.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "14092"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"tAGvFDzZmAzl5+L9lH2CQg9W+pvrkTpyFJ06RrCDc9E=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:47:20 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wb2y2f2z19"
+        },
+        {
+          "Name": "label",
+          "Value": "css/dashboard-luxury.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-tAGvFDzZmAzl5+L9lH2CQg9W+pvrkTpyFJ06RrCDc9E="
+        }
+      ]
+    },
+    {
+      "Route": "css/index-list.5xvpf4tn4o.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\index-list.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "16931"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JwNy4P4Ah8fz7eFMKa8REOoeJiELxe6ba2dkq7zc194=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:33:33 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5xvpf4tn4o"
+        },
+        {
+          "Name": "label",
+          "Value": "css/index-list.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-JwNy4P4Ah8fz7eFMKa8REOoeJiELxe6ba2dkq7zc194="
+        }
+      ]
+    },
+    {
+      "Route": "css/index-list.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\index-list.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "16931"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JwNy4P4Ah8fz7eFMKa8REOoeJiELxe6ba2dkq7zc194=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:33:33 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-JwNy4P4Ah8fz7eFMKa8REOoeJiELxe6ba2dkq7zc194="
+        }
+      ]
+    },
+    {
+      "Route": "css/lux_layout.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13075"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f9JVPCY+1R2TfH0p+mnSTodl/cboafYbbTwpxfEcwaw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:19:49 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-f9JVPCY+1R2TfH0p+mnSTodl/cboafYbbTwpxfEcwaw="
+        }
+      ]
+    },
+    {
+      "Route": "css/lux_layout.h4myl9hqdi.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "13075"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f9JVPCY+1R2TfH0p+mnSTodl/cboafYbbTwpxfEcwaw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:19:49 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "h4myl9hqdi"
+        },
+        {
+          "Name": "label",
+          "Value": "css/lux_layout.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-f9JVPCY+1R2TfH0p+mnSTodl/cboafYbbTwpxfEcwaw="
+        }
+      ]
+    },
+    {
       "Route": "css/site.css",
       "AssetFile": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\site.css",
       "Selectors": [],
@@ -1507,7 +1837,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 30 Oct 2025 08:40:33 GMT"
+          "Value": "Sat, 01 Nov 2025 07:12:45 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1544,7 +1874,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 30 Oct 2025 08:40:33 GMT"
+          "Value": "Sat, 01 Nov 2025 07:12:45 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1563,6 +1893,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-xt+Mv3hpIjKKdhWz9E59SU7wWWjh/Vv/4MMDluj/kcI="
+        }
+      ]
+    },
+    {
+      "Route": "css/tasks-luxury.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\tasks-luxury.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "20690"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NiJJ3OmZmQa8woQXhPypep1rR6LFeroEoA7Mi+Q5DIs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:39:40 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-NiJJ3OmZmQa8woQXhPypep1rR6LFeroEoA7Mi+Q5DIs="
+        }
+      ]
+    },
+    {
+      "Route": "css/tasks-luxury.u3caexps6f.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\tasks-luxury.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "20690"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NiJJ3OmZmQa8woQXhPypep1rR6LFeroEoA7Mi+Q5DIs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Nov 2025 07:39:40 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "u3caexps6f"
+        },
+        {
+          "Name": "label",
+          "Value": "css/tasks-luxury.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-NiJJ3OmZmQa8woQXhPypep1rR6LFeroEoA7Mi+Q5DIs="
         }
       ]
     },

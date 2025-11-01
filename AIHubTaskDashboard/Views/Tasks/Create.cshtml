@@ -4,47 +4,88 @@
 @{
     ViewBag.Title = "Tạo Task Mới";
 
-    var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
+    var viewBagUsersType = ViewBag.Users?.GetType().Name ?? "NULL";
+    System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] ViewBag.Users type: {viewBagUsersType}");
+
+    JsonElement usersJson;
+
+    if (ViewBag.Users is JsonElement jsonElement)
+    {
+        usersJson = jsonElement;
+        System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users is JsonElement, ValueKind: {jsonElement.ValueKind}");
+    }
+    else if (ViewBag.Users is string jsonString)
+    {
+        usersJson = JsonDocument.Parse(jsonString).RootElement;
+        System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users is String, parsed to JsonElement");
+    }
+    else
+    {
+        usersJson = JsonDocument.Parse("[]").RootElement;
+        System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users is UNKNOWN TYPE, using empty array");
+    }
+
     var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+    var usersCount = users.Count();
+    System.Diagnostics.Debug.WriteLine($"[CREATE VIEW] Users count: {usersCount}");
+
+    // 🔥 Load tags từ ViewBag
+    JsonElement tagsJson;
+    if (ViewBag.Tags is JsonElement tagsElement)
+    {
+        tagsJson = tagsElement;
+    }
+    else
+    {
+        tagsJson = JsonDocument.Parse("[]").RootElement;
+    }
+    var tags = tagsJson.ValueKind == JsonValueKind.Array ? tagsJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+
     var defaultStatus = "To Do";
     var defaultDeadline = DateTime.Now.AddDays(7).ToString("yyyy-MM-dd");
 }
 
-<h2 class="fw-bold mb-4">@ViewBag.Title</h2>
+<link rel="stylesheet" href="~/css/tasks-luxury.css">
 
-<div class="card shadow-sm profile-card">
-    <div class="card-body p-4 p-md-5">
+<h2 class="tk-page-title tk-fw-bold tk-mb-4">@ViewBag.Title</h2>
+
+<div class="tk-card tk-mb-4">
+    <div class="tk-card-body">
 
         @if (TempData["Error"] != null)
         {
-            <div class="alert alert-danger mb-4">@TempData["Error"]</div>
+            <div class="tk-alert tk-alert-danger tk-mb-4">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>@TempData["Error"]</span>
+                <button type="button" class="tk-alert-close" data-dismiss="alert">&times;</button>
+            </div>
         }
 
-        <form asp-action="Create" method="post" class="row g-4">
+        <form asp-action="Create" method="post" class="tk-form" id="createTaskForm">
 
-            <div class="col-12">
-                <label for="titleInput" class="form-label fw-semibold">Tiêu đề Task <span class="text-danger">*</span></label>
-                <input type="text" id="titleInput" name="title" class="form-control" required placeholder="Ví dụ: Tối ưu hóa API cho Mobile App" />
+            <div class="tk-form-col-12">
+                <label for="titleInput" class="tk-form-label">Tiêu đề Task <span class="tk-text-danger">*</span></label>
+                <input type="text" id="titleInput" name="title" class="tk-input" required placeholder="Ví dụ: Tối ưu hóa API cho Mobile App" />
             </div>
 
-            <div class="col-12">
-                <label for="descriptionInput" class="form-label fw-semibold">Mô tả chi tiết</label>
-                <textarea id="descriptionInput" name="description" class="form-control" rows="3" placeholder="Mô tả cụ thể công việc cần làm..."></textarea>
+            <div class="tk-form-col-12">
+                <label for="descriptionInput" class="tk-form-label">Mô tả chi tiết</label>
+                <textarea id="descriptionInput" name="description" class="tk-textarea" rows="3" placeholder="Mô tả cụ thể công việc cần làm..."></textarea>
             </div>
 
-            <div class="col-md-6">
-                <label for="deadlineInput" class="form-label fw-semibold">Deadline</label>
-                <input type="date" id="deadlineInput" name="deadline" class="form-control" value="@defaultDeadline" />
+            <div class="tk-form-col-6">
+                <label for="deadlineInput" class="tk-form-label">Deadline</label>
+                <input type="date" id="deadlineInput" name="deadline" class="tk-input" value="@defaultDeadline" />
             </div>
 
-            <div class="col-md-6">
-                <label for="expectedOutputInput" class="form-label fw-semibold">Đầu ra mong đợi (Expected Output)</label>
-                <input type="text" id="expectedOutputInput" name="expected_output" class="form-control" placeholder="Tóm tắt kết quả cuối cùng..." />
+            <div class="tk-form-col-6">
+                <label for="expectedOutputInput" class="tk-form-label">Đầu ra mong đợi (Expected Output)</label>
+                <input type="text" id="expectedOutputInput" name="expected_output" class="tk-input" placeholder="Tóm tắt kết quả cuối cùng..." />
             </div>
 
-            <div class="col-md-4">
-                <label for="statusInput" class="form-label fw-semibold">Trạng thái</label>
-                <select id="statusInput" name="status" class="form-select">
+            <div class="tk-form-col-4">
+                <label for="statusInput" class="tk-form-label">Trạng thái</label>
+                <select id="statusInput" name="status" class="tk-select">
                     @{
                         var taskStatuses = new List<string> { "To Do", "In Progress", "Completed" };
                     }
@@ -55,30 +96,10 @@
                 </select>
             </div>
 
-            <select id="assigneeInput" name="assignee_id" class="form-select" required>
-                <option value="">-- Chọn người giao --</option>
-                @foreach (var user in users)
-                {
-                    var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
-                    var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
-
-                    if (userId == 0) continue;
-
-                    <option value="@userId">@fullName</option>
-                }
-
-            </select>
-
-
-            <div class="col-md-4">
-                <label for="progressInput" class="form-label fw-semibold">Tiến độ (%)</label>
-                <input type="number" id="progressInput" name="progress_percentage" class="form-control" min="0" max="100" value="0" required />
-            </div>
-
-            <div class="col-md-8">
-                <label for="collaboratorsInput" class="form-label fw-semibold">Cộng tác viên (Collaborators)</label>
-                <select id="collaboratorsInput" name="collaborators" class="form-select" multiple>
-                    {{-- SỬ DỤNG DATA ĐỘNG CHO COLLABORATORS (Lặp lại Users) --}}
+            <div class="tk-form-col-4">
+                <label for="assigneeInput" class="tk-form-label">Người thực hiện <span class="tk-text-danger">*</span></label>
+                <select id="assigneeInput" name="assignee_id" class="tk-select" required>
+                    <option value="">-- Chọn người thực hiện --</option>
                     @foreach (var user in users)
                     {
                         var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
@@ -88,22 +109,58 @@
 
                         <option value="@userId">@fullName</option>
                     }
-
                 </select>
-                <small class="text-muted">Giữ Ctrl hoặc Command để chọn nhiều người.</small>
             </div>
 
-            <div class="col-md-4">
-                <label for="notionLinkInput" class="form-label fw-semibold">Link Notion/Tài liệu</label>
-                <input type="url" id="notionLinkInput" name="notion_link" class="form-control" placeholder="https://notion.so/..." />
+            <div class="tk-form-col-4">
+                <label for="progressInput" class="tk-form-label">Tiến độ (%)</label>
+                <input type="number" id="progressInput" name="progress_percentage" class="tk-input" min="0" max="100" value="0" required />
             </div>
 
+            <!-- 🔥 NEW: Tags Selection -->
+            <div class="tk-form-col-12">
+                <label class="tk-form-label">
+                    <i class="bi bi-tags-fill"></i>Tags
+                </label>
+                <div id="tagsContainer" class="tk-tags-container">
+                    <div id="selectedTags" class="tk-tags-selected"></div>
+                    <input type="text"
+                           id="tagSearchInput"
+                           class="tk-tags-input"
+                           placeholder="Tìm hoặc tạo tag mới..."
+                           autocomplete="off" />
+                    <div id="tagSuggestions" class="tk-tags-suggestions"></div>
+                </div>
+                <input type="hidden" id="tagsInput" name="tags" value="" />
+                <small class="tk-text-muted">Click để chọn tag có sẵn hoặc nhập tên mới để tạo tag</small>
+            </div>
 
-            <div class="col-12 mt-5">
-                <button type="submit" class="btn btn-success btn-lg me-3">
-                    <i class="bi bi-save me-2"></i> Tạo Task
+            <div class="tk-form-col-8">
+                <label for="collaboratorsInput" class="tk-form-label">Cộng tác viên (Collaborators)</label>
+                <select id="collaboratorsInput" name="collaborators" class="tk-select" multiple style="height: 120px;">
+                    @foreach (var user in users)
+                    {
+                        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() : "Unknown User";
+
+                        if (userId == 0) continue;
+
+                        <option value="@userId">@fullName</option>
+                    }
+                </select>
+                <small class="tk-text-muted">Giữ Ctrl hoặc Command để chọn nhiều người.</small>
+            </div>
+
+            <div class="tk-form-col-4">
+                <label for="notionLinkInput" class="tk-form-label">Link Notion/Tài liệu</label>
+                <input type="url" id="notionLinkInput" name="notion_link" class="tk-input" placeholder="https://notion.so/..." />
+            </div>
+
+            <div class="tk-form-col-12" style="margin-top: 2rem;">
+                <button type="submit" class="tk-btn tk-btn-success tk-btn-lg" id="submitBtn" style="margin-right: 1rem;">
+                    <i class="bi bi-save"></i> <span id="btnText">Tạo Task</span>
                 </button>
-                <a href="@Url.Action("Index", "Tasks")" class="btn btn-outline-secondary btn-lg">
+                <a href="@Url.Action("Index", "Tasks")" class="tk-btn tk-btn-outline-secondary tk-btn-lg">
                     Hủy
                 </a>
             </div>
@@ -111,3 +168,177 @@
 
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // 🔥 Tags Management
+        (function() {
+            const availableTags = @Html.Raw(Json.Serialize(tags.Select(t => new
+            {
+                name = t.TryGetProperty("name", out var n) ? n.GetString() : "",
+                bg_color = t.TryGetProperty("tag_bg", out var bg) ? bg.GetString() : "#808080",
+                fg_color = t.TryGetProperty("tag_fg", out var fg) ? fg.GetString() : "#FFFFFF"
+            })));
+
+            const selectedTags = new Set();
+            const tagSearchInput = document.getElementById('tagSearchInput');
+            const selectedTagsContainer = document.getElementById('selectedTags');
+            const tagSuggestions = document.getElementById('tagSuggestions');
+            const tagsInput = document.getElementById('tagsInput');
+
+            // Render selected tags
+            function renderSelectedTags() {
+                selectedTagsContainer.innerHTML = '';
+                selectedTags.forEach(tagName => {
+                    const tag = availableTags.find(t => t.name === tagName) || {
+                        name: tagName,
+                        bg_color: '#6c757d',
+                        fg_color: '#ffffff'
+                    };
+
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tk-tag-item';
+                    tagElement.style.backgroundColor = tag.bg_color;
+                    tagElement.style.color = tag.fg_color;
+                    tagElement.innerHTML = `
+                        ${tag.name}
+                        <button type="button" class="tk-tag-remove" aria-label="Remove">&times;</button>
+                    `;
+
+                    tagElement.querySelector('.tk-tag-remove').addEventListener('click', () => {
+                        selectedTags.delete(tagName);
+                        renderSelectedTags();
+                        updateHiddenInput();
+                    });
+
+                    selectedTagsContainer.appendChild(tagElement);
+                });
+                updateHiddenInput();
+            }
+
+            // Update hidden input
+            function updateHiddenInput() {
+                tagsInput.value = Array.from(selectedTags).join(',');
+            }
+
+            // Show suggestions
+            function showSuggestions(searchTerm) {
+                const filtered = availableTags.filter(tag =>
+                    tag.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                    !selectedTags.has(tag.name)
+                );
+
+                if (filtered.length === 0 && searchTerm.trim() !== '') {
+                    // Show "create new tag" option
+                    tagSuggestions.innerHTML = `
+                        <div class="tk-suggestions-list">
+                            <button type="button" class="tk-suggestion-item" data-create-tag="${searchTerm}">
+                                <i class="bi bi-plus-circle"></i>Tạo tag mới: <strong>"${searchTerm}"</strong>
+                            </button>
+                        </div>
+                    `;
+                } else if (filtered.length > 0) {
+                    tagSuggestions.innerHTML = '<div class="tk-suggestions-list">' +
+                        filtered.map(tag => `
+                            <button type="button" class="tk-suggestion-item" data-tag-name="${tag.name}">
+                                <span class="tk-suggestion-badge" style="background-color: ${tag.bg_color}; color: ${tag.fg_color};">${tag.name}</span>
+                            </button>
+                        `).join('') +
+                        '</div>';
+                } else {
+                    tagSuggestions.innerHTML = '';
+                }
+
+                tagSuggestions.style.display = tagSuggestions.innerHTML ? 'block' : 'none';
+            }
+
+            // Event listeners
+            tagSearchInput.addEventListener('input', (e) => {
+                showSuggestions(e.target.value);
+            });
+
+            tagSearchInput.addEventListener('focus', (e) => {
+                showSuggestions(e.target.value);
+            });
+
+            tagSearchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const searchTerm = tagSearchInput.value.trim();
+                    if (searchTerm && !selectedTags.has(searchTerm)) {
+                        selectedTags.add(searchTerm);
+                        renderSelectedTags();
+                        tagSearchInput.value = '';
+                        tagSuggestions.style.display = 'none';
+                    }
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-tag-name]')) {
+                    const tagName = e.target.closest('[data-tag-name]').dataset.tagName;
+                    selectedTags.add(tagName);
+                    renderSelectedTags();
+                    tagSearchInput.value = '';
+                    tagSuggestions.style.display = 'none';
+                } else if (e.target.closest('[data-create-tag]')) {
+                    const tagName = e.target.closest('[data-create-tag]').dataset.createTag;
+                    selectedTags.add(tagName);
+                    renderSelectedTags();
+                    tagSearchInput.value = '';
+                    tagSuggestions.style.display = 'none';
+                } else if (!e.target.closest('#tagsContainer')) {
+                    tagSuggestions.style.display = 'none';
+                }
+            });
+
+            // Prevent double submit
+            const form = document.getElementById('createTaskForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            let isSubmitting = false;
+
+            form.addEventListener('submit', function(e) {
+                if (isSubmitting) {
+                    e.preventDefault();
+                    console.warn('⚠️ Form already submitting');
+                    return false;
+                }
+
+                if (!form.checkValidity()) {
+                    return true;
+                }
+
+                isSubmitting = true;
+                submitBtn.disabled = true;
+                submitBtn.classList.add('tk-btn-loading');
+                btnText.textContent = 'Đang tạo...';
+
+                const spinner = document.createElement('span');
+                spinner.className = 'tk-spinner';
+                submitBtn.insertBefore(spinner, btnText);
+
+                setTimeout(function() {
+                    if (isSubmitting) {
+                        isSubmitting = false;
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('tk-btn-loading');
+                        btnText.textContent = 'Tạo Task';
+                        spinner.remove();
+                    }
+                }, 10000);
+            });
+
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('tk-btn-loading');
+                    btnText.textContent = 'Tạo Task';
+                    const spinner = submitBtn.querySelector('.tk-spinner');
+                    if (spinner) spinner.remove();
+                }
+            });
+        })();
+    </script>
+}

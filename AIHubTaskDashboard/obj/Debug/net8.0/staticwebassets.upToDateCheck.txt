@@ -1,4 +1,8 @@
+wwwroot\css\dashboard-luxury.css
+wwwroot\css\index-list.css
+wwwroot\css\lux_layout.css
 wwwroot\css\site.css
+wwwroot\css\tasks-luxury.css
 wwwroot\favicon.ico
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap.css

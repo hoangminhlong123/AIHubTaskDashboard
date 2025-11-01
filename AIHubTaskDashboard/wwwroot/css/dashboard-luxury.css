@@ -1,0 +1,654 @@
+﻿/* ============================================
+   🔥 DASHBOARD - LUXURY DESIGN (NO BOOTSTRAP)
+   File: dashboard-luxury.css
+   Prefix: db- (Dashboard)
+   ============================================ */
+
+/* CSS Variables */
+:root {
+    --db-navy: #0F1330;
+    --db-pale: #E9D9C5;
+    --db-sand: #C3A387;
+    --db-terracotta: #7A3F30;
+    --db-gold: #D4A459;
+    --db-clay: #CC7051;
+    /* Status Colors */
+    --db-primary: #0d6efd;
+    --db-success: #198754;
+    --db-warning: #ffc107;
+    --db-danger: #dc3545;
+    --db-info: #0dcaf0;
+    --db-secondary: #6c757d;
+    /* Shadows & Effects */
+    --db-shadow-sm: 0 2px 8px rgba(15, 19, 48, 0.08);
+    --db-shadow-md: 0 4px 16px rgba(15, 19, 48, 0.12);
+    --db-shadow-lg: 0 10px 40px rgba(15, 19, 48, 0.16);
+    --db-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   WELCOME BANNER
+   ============================================ */
+.db-welcome-banner {
+    margin-bottom: 2rem;
+}
+
+.db-welcome-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--db-navy);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+    .db-welcome-title i {
+        color: var(--db-primary);
+    }
+
+.db-welcome-text {
+    font-size: 1rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ============================================
+   ALERTS
+   ============================================ */
+.db-alert {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+    .db-alert i {
+        font-size: 1.25rem;
+    }
+
+.db-alert-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+    border-left: 4px solid var(--db-danger);
+    color: #991b1b;
+}
+
+.db-alert-info {
+    background: linear-gradient(135deg, rgba(13, 202, 240, 0.1), rgba(13, 202, 240, 0.05));
+    border-left: 4px solid var(--db-info);
+    color: #0c4a6e;
+}
+
+.db-alert-link {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+    .db-alert-link:hover {
+        opacity: 0.8;
+    }
+
+/* ============================================
+   KPI CARDS
+   ============================================ */
+.db-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.db-kpi-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--db-shadow-md);
+    transition: var(--db-transition);
+}
+
+    .db-kpi-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--db-shadow-lg);
+    }
+
+.db-kpi-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.db-kpi-info {
+    flex: 1;
+}
+
+.db-kpi-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.db-kpi-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--db-navy);
+    margin: 0;
+}
+
+.db-kpi-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+}
+
+.db-kpi-icon-primary {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.15), rgba(13, 110, 253, 0.08));
+    color: var(--db-primary);
+}
+
+.db-kpi-icon-success {
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.15), rgba(25, 135, 84, 0.08));
+    color: var(--db-success);
+}
+
+.db-kpi-icon-warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.08));
+    color: var(--db-warning);
+}
+
+.db-kpi-icon-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.15), rgba(220, 53, 69, 0.08));
+    color: var(--db-danger);
+}
+
+.db-kpi-footer {
+    margin-top: 1rem;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.db-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--db-transition);
+    text-decoration: none;
+}
+
+.db-btn-sm {
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8rem;
+}
+
+.db-btn-outline-primary {
+    background: transparent;
+    color: var(--db-primary);
+    border: 2px solid var(--db-primary);
+}
+
+    .db-btn-outline-primary:hover {
+        background: var(--db-primary);
+        color: white;
+    }
+
+.db-btn-outline-warning {
+    background: transparent;
+    color: var(--db-warning);
+    border: 2px solid var(--db-warning);
+}
+
+    .db-btn-outline-warning:hover {
+        background: var(--db-warning);
+        color: var(--db-navy);
+    }
+
+/* ============================================
+   BADGES
+   ============================================ */
+.db-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.db-badge-primary {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(13, 110, 253, 0.1));
+    color: var(--db-primary);
+}
+
+.db-badge-success {
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.2), rgba(25, 135, 84, 0.1));
+    color: var(--db-success);
+}
+
+.db-badge-warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 193, 7, 0.1));
+    color: #856404;
+}
+
+.db-badge-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(220, 53, 69, 0.1));
+    color: var(--db-danger);
+}
+
+.db-badge-secondary {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.2), rgba(108, 117, 125, 0.1));
+    color: var(--db-secondary);
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.db-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--db-shadow-md);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.db-card-header {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.db-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--db-navy);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.db-card-body {
+    padding: 1.75rem;
+}
+
+.db-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ============================================
+   GRIDS
+   ============================================ */
+.db-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.db-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+/* ============================================
+   PROGRESS OVERVIEW
+   ============================================ */
+.db-progress-overview {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 250px;
+}
+
+.db-progress-display {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.db-progress-number {
+    font-size: 4rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--db-primary), var(--db-info));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+}
+
+.db-progress-label {
+    font-size: 1rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.db-progress-bar-container {
+    width: 100%;
+    height: 30px;
+    background: rgba(233, 217, 197, 0.3);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.db-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--db-primary), var(--db-info));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: white;
+    transition: width 0.6s ease;
+}
+
+.db-progress-small {
+    height: 10px;
+    margin-bottom: 0.75rem;
+}
+
+.db-progress-success {
+    background: linear-gradient(90deg, var(--db-success), #16a34a);
+}
+
+/* ============================================
+   TASK LIST
+   ============================================ */
+.db-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.db-task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid rgba(233, 217, 197, 0.3);
+    border-radius: 12px;
+    text-decoration: none;
+    transition: var(--db-transition);
+}
+
+    .db-task-item:hover {
+        background: linear-gradient(135deg, rgba(233, 217, 197, 0.1), rgba(195, 163, 135, 0.05));
+        box-shadow: var(--db-shadow-sm);
+        transform: translateX(4px);
+    }
+
+.db-task-item-content {
+    flex: 1;
+    margin-right: 1.5rem;
+}
+
+.db-task-item-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--db-navy);
+    margin-bottom: 0.5rem;
+}
+
+.db-task-item-progress {
+    min-width: 80px;
+    text-align: right;
+}
+
+.db-progress-text {
+    display: block;
+    font-weight: 700;
+    color: var(--db-navy);
+    margin-bottom: 0.25rem;
+}
+
+.db-progress-mini {
+    width: 80px;
+    height: 6px;
+    background: rgba(233, 217, 197, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.db-progress-mini-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--db-primary), var(--db-info));
+    border-radius: 3px;
+}
+
+.db-progress-table {
+    width: 80px;
+    margin: 0 auto 0.25rem;
+}
+
+/* ============================================
+   TOP PERFORMERS
+   ============================================ */
+.db-performer-card {
+    background: white;
+    border: 2px solid var(--db-pale);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: var(--db-transition);
+}
+
+    .db-performer-card:hover {
+        border-color: var(--db-gold);
+        box-shadow: var(--db-shadow-md);
+        transform: translateY(-4px);
+    }
+
+.db-performer-medal {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.db-performer-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--db-navy);
+    margin-bottom: 0.5rem;
+}
+
+.db-performer-stats {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.db-performer-rate {
+    display: block;
+    font-weight: 700;
+    color: var(--db-success);
+}
+
+/* ============================================
+   TABLE
+   ============================================ */
+.db-table-container {
+    padding: 0;
+    overflow-x: auto;
+}
+
+.db-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .db-table thead {
+        background: linear-gradient(135deg, var(--db-navy), #1a1f4d);
+    }
+
+        .db-table thead th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+    .db-table tbody tr {
+        border-bottom: 1px solid rgba(233, 217, 197, 0.3);
+        transition: var(--db-transition);
+    }
+
+        .db-table tbody tr:hover {
+            background: linear-gradient(135deg, rgba(233, 217, 197, 0.1), rgba(195, 163, 135, 0.05));
+        }
+
+    .db-table tbody td {
+        padding: 1rem;
+        font-size: 0.9rem;
+        color: #334155;
+    }
+
+.db-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.db-avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--db-gold), var(--db-clay));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.db-completion-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.db-completion-text {
+    font-weight: 700;
+    color: var(--db-success);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.db-text-center {
+    text-align: center;
+}
+
+.db-text-primary {
+    color: var(--db-primary);
+}
+
+.db-text-success {
+    color: var(--db-success);
+}
+
+.db-text-warning {
+    color: var(--db-warning);
+}
+
+.db-text-danger {
+    color: var(--db-danger);
+}
+
+.db-text-info {
+    color: var(--db-info);
+}
+
+.db-text-muted {
+    color: #64748b;
+}
+
+.db-fw-bold {
+    font-weight: 700;
+}
+
+.db-fw-semibold {
+    font-weight: 600;
+}
+
+.db-empty-message {
+    text-align: center;
+    color: #64748b;
+    padding: 2rem 0;
+    margin: 0;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1200px) {
+    .db-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .db-grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .db-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .db-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .db-grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .db-welcome-title {
+        font-size: 1.5rem;
+    }
+
+    .db-kpi-value {
+        font-size: 1.75rem;
+    }
+
+    .db-card-body {
+        padding: 1.25rem;
+    }
+
+    .db-progress-number {
+        font-size: 3rem;
+    }
+
+    .db-table {
+        font-size: 0.8rem;
+    }
+
+        .db-table thead th,
+        .db-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+}

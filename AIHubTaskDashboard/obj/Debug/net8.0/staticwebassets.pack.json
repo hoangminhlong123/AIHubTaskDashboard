@@ -5,11 +5,27 @@
       "PackagePath": "staticwebassets\\AIHubTaskDashboard.kp1hxb365f.bundle.scp.css"
     },
     {
-      "Id": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\site.css",
+      "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
+      "PackagePath": "staticwebassets\\css\\dashboard-luxury.css"
+    },
+    {
+      "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\index-list.css",
+      "PackagePath": "staticwebassets\\css\\index-list.css"
+    },
+    {
+      "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
+      "PackagePath": "staticwebassets\\css\\lux_layout.css"
+    },
+    {
+      "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\site.css",
       "PackagePath": "staticwebassets\\css\\site.css"
     },
     {
-      "Id": "D:\\FE AIHUB\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\favicon.ico",
+      "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\tasks-luxury.css",
+      "PackagePath": "staticwebassets\\css\\tasks-luxury.css"
+    },
+    {
+      "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\favicon.ico",
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {

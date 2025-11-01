@@ -27,8 +27,10 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.GetAsync(endpoint);
 			var content = await response.Content.ReadAsStringAsync();
+
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"GET {endpoint} failed: {response.StatusCode} - {content}");
+
 			return content;
 		}
 
@@ -37,8 +39,10 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.PostAsJsonAsync(endpoint, data);
 			var content = await response.Content.ReadAsStringAsync();
+
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"POST {endpoint} failed: {response.StatusCode} - {content}");
+
 			return content;
 		}
 
@@ -47,19 +51,22 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.PutAsJsonAsync(endpoint, data);
 			var content = await response.Content.ReadAsStringAsync();
+
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"PUT {endpoint} failed: {response.StatusCode} - {content}");
+
 			return content;
 		}
 
-		// ✅ THÊM METHOD NÀY
 		public async Task<string> PatchAsync(string endpoint, object data)
 		{
 			AddAuthHeader();
 			var response = await _httpClient.PatchAsJsonAsync(endpoint, data);
 			var content = await response.Content.ReadAsStringAsync();
+
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"PATCH {endpoint} failed: {response.StatusCode} - {content}");
+
 			return content;
 		}
 
@@ -68,8 +75,10 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.DeleteAsync(endpoint);
 			var content = await response.Content.ReadAsStringAsync();
+
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"DELETE {endpoint} failed: {response.StatusCode} - {content}");
+
 			return content;
 		}
 	}

@@ -6,52 +6,260 @@
     var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
     var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
 
+    // Load tags
+    JsonElement tagsJson;
+    if (ViewBag.Tags is JsonElement tagsElement)
+    {
+        tagsJson = tagsElement;
+    }
+    else
+    {
+        tagsJson = JsonDocument.Parse("[]").RootElement;
+    }
+    var tags = tagsJson.ValueKind == JsonValueKind.Array ? tagsJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+
+    // Extract task data
     int taskId = Model.TryGetProperty("task_id", out var id) ? id.GetInt32() : 0;
     string title = Model.TryGetProperty("title", out var t) ? t.GetString() : "";
     string description = Model.TryGetProperty("description", out var d) ? d.GetString() : "";
-    string status = Model.TryGetProperty("status", out var s) ? s.GetString() : "";
+    string status = Model.TryGetProperty("status", out var st) ? st.GetString() : "";
     int progress = Model.TryGetProperty("progress_percentage", out var p) ? p.GetInt32() : 0;
-    int assigneeId = Model.TryGetProperty("assignee_id", out var aid) ? aid.GetInt32() : 0;
+    string clickupId = Model.TryGetProperty("clickup_id", out var c) ? c.GetString() : "Chưa đồng bộ";
+    int currentAssigneeId = Model.TryGetProperty("assignee_id", out var aid) ? aid.GetInt32() : 0;
+    int assignerId = Model.TryGetProperty("assigner_id", out var aoid) ? aoid.GetInt32() : 0;
+
+    // Extract current tags
+    var currentTags = new List<string>();
+    if (Model.TryGetProperty("tags", out var tagsProperty) && tagsProperty.ValueKind == JsonValueKind.Array)
+    {
+        foreach (var tag in tagsProperty.EnumerateArray())
+        {
+            var tagName = tag.TryGetProperty("name", out var tn) ? tn.GetString() : "";
+            if (!string.IsNullOrEmpty(tagName))
+            {
+                currentTags.Add(tagName);
+            }
+        }
+    }
 }
 
-<h2>Edit Task #@taskId</h2>
+<link rel="stylesheet" href="~/css/tasks-luxury.css">
 
-<form asp-action="Edit" asp-route-id="@taskId" method="post" class="row g-3">
-    <div class="col-12">
-        <label>Title</label>
-        <input name="title" class="form-control" value="@title" required />
+<h2 class="tk-page-title tk-fw-bold tk-mb-4">Chỉnh sửa Task #@taskId</h2>
+
+<div class="tk-card tk-mb-4">
+    <div class="tk-card-body" style="padding: 1rem 1.75rem;">
+        <p style="margin: 0; color: #64748b;">Người tạo: <span class="tk-fw-semibold" style="color: var(--tk-navy);">#@assignerId</span></p>
     </div>
-    <div class="col-12">
-        <label>Description</label>
-        <textarea name="description" class="form-control">@description</textarea>
+</div>
+
+<div class="tk-card tk-mb-4">
+    <div class="tk-card-body">
+
+        <form asp-action="Edit" method="post" class="tk-form" asp-route-id="@taskId">
+
+            <div class="tk-form-col-12">
+                <label for="titleInput" class="tk-form-label">Tiêu đề Task <span class="tk-text-danger">*</span></label>
+                <input type="text" id="titleInput" name="title" class="tk-input" value="@title" required />
+            </div>
+
+            <div class="tk-form-col-12">
+                <label for="descriptionInput" class="tk-form-label">Mô tả chi tiết</label>
+                <textarea id="descriptionInput" name="description" class="tk-textarea" rows="4">@description</textarea>
+            </div>
+
+            <div class="tk-form-col-4">
+                <label for="statusInput" class="tk-form-label">Trạng thái</label>
+                <select id="statusInput" name="status" class="tk-select">
+                    @{
+                        var taskStatuses = new List<string> { "To Do", "In Progress", "Completed" };
+                    }
+                    @foreach (var statusOption in taskStatuses)
+                    {
+                        <option value="@statusOption" selected="@(status == statusOption)">@statusOption</option>
+                    }
+                </select>
+            </div>
+
+            <div class="tk-form-col-4">
+                <label for="assigneeInput" class="tk-form-label">Người được giao</label>
+                <select id="assigneeInput" name="assignee_id" class="tk-select">
+                    <option value="">-- Chọn người giao --</option>
+                    @foreach (var user in users)
+                    {
+                        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+                        var fullName = user.TryGetProperty("name", out var fn) ? fn.GetString() :
+                        (user.TryGetProperty("username", out var un) ? un.GetString() : "Unknown User");
+
+                        if (userId == 0) continue;
+
+                        <option value="@userId" selected="@(currentAssigneeId == userId)">@fullName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="tk-form-col-4">
+                <label for="progressInput" class="tk-form-label">Tiến độ (%)</label>
+                <input type="number" id="progressInput" name="progress_percentage" class="tk-input" min="0" max="100" value="@progress" required />
+            </div>
+
+            <!-- 🔥 NEW: Tags Selection -->
+            <div class="tk-form-col-12">
+                <label class="tk-form-label">
+                    <i class="bi bi-tags-fill"></i>Tags
+                </label>
+                <div id="tagsContainer" class="tk-tags-container">
+                    <div id="selectedTags" class="tk-tags-selected"></div>
+                    <input type="text"
+                           id="tagSearchInput"
+                           class="tk-tags-input"
+                           placeholder="Tìm hoặc tạo tag mới..."
+                           autocomplete="off" />
+                    <div id="tagSuggestions" class="tk-tags-suggestions"></div>
+                </div>
+                <input type="hidden" id="tagsInput" name="tags" value="" />
+                <small class="tk-text-muted">Click để chọn tag có sẵn hoặc nhập tên mới để tạo tag</small>
+            </div>
+
+            <div class="tk-form-col-12" style="margin-top: 2rem;">
+                <button type="submit" class="tk-btn tk-btn-primary tk-btn-lg" style="margin-right: 1rem;">
+                    <i class="bi bi-save"></i> Lưu Thay đổi
+                </button>
+                <a href="@Url.Action("Index", "Tasks")" class="tk-btn tk-btn-outline-secondary tk-btn-lg">
+                    Quay lại
+                </a>
+            </div>
+        </form>
+
     </div>
-    <div class="col-md-4">
-        <label>Status</label>
-        <select name="status" class="form-select">
-            @foreach (var s in new[] { "To Do", "In Progress", "Completed" })
+</div>
+
+@section Scripts {
+    <script>
+        // 🔥 Tags Management
+        (function() {
+            const availableTags = @Html.Raw(Json.Serialize(tags.Select(t => new
             {
-                <option value="@s" selected="@(s==status)">@s</option>
+                name = t.TryGetProperty("name", out var n) ? n.GetString() : "",
+                bg_color = t.TryGetProperty("tag_bg", out var bg) ? bg.GetString() : "#808080",
+                fg_color = t.TryGetProperty("tag_fg", out var fg) ? fg.GetString() : "#FFFFFF"
+            })));
+
+            const currentTags = @Html.Raw(Json.Serialize(currentTags));
+            const selectedTags = new Set(currentTags);
+
+            const tagSearchInput = document.getElementById('tagSearchInput');
+            const selectedTagsContainer = document.getElementById('selectedTags');
+            const tagSuggestions = document.getElementById('tagSuggestions');
+            const tagsInput = document.getElementById('tagsInput');
+
+            // Render selected tags
+            function renderSelectedTags() {
+                selectedTagsContainer.innerHTML = '';
+                selectedTags.forEach(tagName => {
+                    const tag = availableTags.find(t => t.name === tagName) || {
+                        name: tagName,
+                        bg_color: '#6c757d',
+                        fg_color: '#ffffff'
+                    };
+
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tk-tag-item';
+                    tagElement.style.backgroundColor = tag.bg_color;
+                    tagElement.style.color = tag.fg_color;
+                    tagElement.innerHTML = `
+                        ${tag.name}
+                        <button type="button" class="tk-tag-remove" aria-label="Remove">&times;</button>
+                    `;
+
+                    tagElement.querySelector('.tk-tag-remove').addEventListener('click', () => {
+                        selectedTags.delete(tagName);
+                        renderSelectedTags();
+                        updateHiddenInput();
+                    });
+
+                    selectedTagsContainer.appendChild(tagElement);
+                });
+                updateHiddenInput();
             }
-        </select>
-    </div>
-    <div class="col-md-4">
-        <label>Assignee</label>
-        <select name="assignee_id" class="form-select">
-            @foreach (var u in users)
-            {
-                var uid = u.TryGetProperty("id", out var idp) ? idp.GetInt32() : 0;
-                var uname = u.TryGetProperty("name", out var n) ? n.GetString() : "Unknown";
-                if (uid == 0) continue;
-                <option value="@uid" selected="@(uid==assigneeId)">@uname</option>
+
+            // Update hidden input
+            function updateHiddenInput() {
+                tagsInput.value = Array.from(selectedTags).join(',');
             }
-        </select>
-    </div>
-    <div class="col-md-4">
-        <label>Progress (%)</label>
-        <input type="number" name="progress_percentage" class="form-control" value="@progress" min="0" max="100" required />
-    </div>
-    <div class="col-12 mt-3">
-        <button class="btn btn-primary">Save</button>
-        <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+
+            // Show suggestions
+            function showSuggestions(searchTerm) {
+                const filtered = availableTags.filter(tag =>
+                    tag.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                    !selectedTags.has(tag.name)
+                );
+
+                if (filtered.length === 0 && searchTerm.trim() !== '') {
+                    tagSuggestions.innerHTML = `
+                        <div class="tk-suggestions-list">
+                            <button type="button" class="tk-suggestion-item" data-create-tag="${searchTerm}">
+                                <i class="bi bi-plus-circle"></i>Tạo tag mới: <strong>"${searchTerm}"</strong>
+                            </button>
+                        </div>
+                    `;
+                } else if (filtered.length > 0) {
+                    tagSuggestions.innerHTML = '<div class="tk-suggestions-list">' +
+                        filtered.map(tag => `
+                            <button type="button" class="tk-suggestion-item" data-tag-name="${tag.name}">
+                                <span class="tk-suggestion-badge" style="background-color: ${tag.bg_color}; color: ${tag.fg_color};">${tag.name}</span>
+                            </button>
+                        `).join('') +
+                        '</div>';
+                } else {
+                    tagSuggestions.innerHTML = '';
+                }
+
+                tagSuggestions.style.display = tagSuggestions.innerHTML ? 'block' : 'none';
+            }
+
+            // Event listeners
+            tagSearchInput.addEventListener('input', (e) => {
+                showSuggestions(e.target.value);
+            });
+
+            tagSearchInput.addEventListener('focus', (e) => {
+                showSuggestions(e.target.value);
+            });
+
+            tagSearchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const searchTerm = tagSearchInput.value.trim();
+                    if (searchTerm && !selectedTags.has(searchTerm)) {
+                        selectedTags.add(searchTerm);
+                        renderSelectedTags();
+                        tagSearchInput.value = '';
+                        tagSuggestions.style.display = 'none';
+                    }
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-tag-name]')) {
+                    const tagName = e.target.closest('[data-tag-name]').dataset.tagName;
+                    selectedTags.add(tagName);
+                    renderSelectedTags();
+                    tagSearchInput.value = '';
+                    tagSuggestions.style.display = 'none';
+                } else if (e.target.closest('[data-create-tag]')) {
+                    const tagName = e.target.closest('[data-create-tag]').dataset.createTag;
+                    selectedTags.add(tagName);
+                    renderSelectedTags();
+                    tagSearchInput.value = '';
+                    tagSuggestions.style.display = 'none';
+                } else if (!e.target.closest('#tagsContainer')) {
+                    tagSuggestions.style.display = 'none';
+                }
+            });
+
+            // Initialize with current tags
+            renderSelectedTags();
+        })();
+    </script>
+}
