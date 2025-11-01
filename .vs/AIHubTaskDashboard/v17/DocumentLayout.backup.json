@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|e:\\aihub task\\dasshboard\\aihubtaskdashboard\\aihubtaskdashboard\\views\\kpi\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|solutionrelative:aihubtaskdashboard\\views\\kpi\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|e:\\aihub task\\dasshboard\\aihubtaskdashboard\\aihubtaskdashboard\\wwwroot\\css\\dashboard-luxury.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
       "RelativeMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|solutionrelative:aihubtaskdashboard\\wwwroot\\css\\dashboard-luxury.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     },
@@ -53,10 +57,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|e:\\aihub task\\dasshboard\\aihubtaskdashboard\\aihubtaskdashboard\\wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
       "RelativeMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|solutionrelative:aihubtaskdashboard\\wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|e:\\aihub task\\dasshboard\\aihubtaskdashboard\\aihubtaskdashboard\\views\\kpi\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|solutionrelative:aihubtaskdashboard\\views\\kpi\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{D0BABE69-B883-4C69-A4B4-956DD042DDE0}|AIHubTaskDashboard\\AIHubTaskDashboard.csproj|e:\\aihub task\\dasshboard\\aihubtaskdashboard\\aihubtaskdashboard\\controllers\\kpicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -150,7 +150,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 13,
           "Children": [
             {
               "$type": "Bookmark",
@@ -174,41 +174,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "dashboard-luxury.css",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
               "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
               "RelativeToolTip": "AIHubTaskDashboard\\wwwroot\\css\\dashboard-luxury.css",
-              "ViewState": "AgIAAFkCAAAAAAAAAAAuwI4CAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAGkCAAAAAAAAAAAYwI4CAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
               "WhenOpened": "2025-11-01T07:47:18.321Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Edit.cshtml",
-              "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
-              "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
-              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
-              "RelativeToolTip": "AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAlwAgBAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-14T10:51:26.689Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "ClickUpService.cs",
-              "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Services\\ClickUpService.cs",
-              "RelativeDocumentMoniker": "AIHubTaskDashboard\\Services\\ClickUpService.cs",
-              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Services\\ClickUpService.cs",
-              "RelativeToolTip": "AIHubTaskDashboard\\Services\\ClickUpService.cs",
-              "ViewState": "AgIAAMECAAAAAAAAAAAqwPMCAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-28T07:45:57.828Z"
             },
             {
               "$type": "Document",
@@ -224,12 +199,12 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Index.cshtml",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Index.cshtml",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Tasks\\Index.cshtml",
-              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Index.cshtml*",
-              "RelativeToolTip": "AIHubTaskDashboard\\Views\\Tasks\\Index.cshtml*",
+              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Index.cshtml",
+              "RelativeToolTip": "AIHubTaskDashboard\\Views\\Tasks\\Index.cshtml",
               "ViewState": "AgIAAGAAAAAAAAAAAAAAAH4AAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-10-14T10:50:54.066Z",
@@ -250,7 +225,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "Index.cshtml",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Home\\Index.cshtml",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Home\\Index.cshtml",
@@ -263,7 +238,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "_Layout.cshtml",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Shared\\_Layout.cshtml",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Shared\\_Layout.cshtml",
@@ -276,7 +251,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "Login.cshtml",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Account\\Login.cshtml",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Account\\Login.cshtml",
@@ -289,7 +264,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "_ViewImports.cshtml",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\_ViewImports.cshtml",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\_ViewImports.cshtml",
@@ -302,7 +277,45 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
+              "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
+              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
+              "RelativeToolTip": "AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
+              "ViewState": "AgIAAJwDAAAAAAAAAAAQwM8DAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-29T08:45:49.123Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "ClickUpService.cs",
+              "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Services\\ClickUpService.cs",
+              "RelativeDocumentMoniker": "AIHubTaskDashboard\\Services\\ClickUpService.cs",
+              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Services\\ClickUpService.cs",
+              "RelativeToolTip": "AIHubTaskDashboard\\Services\\ClickUpService.cs",
+              "ViewState": "AgIAAMECAAAAAAAAAAAqwPMCAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-28T07:45:57.828Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Edit.cshtml",
+              "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
+              "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
+              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
+              "RelativeToolTip": "AIHubTaskDashboard\\Views\\Tasks\\Edit.cshtml",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAlwAgBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-14T10:51:26.689Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "Register.cshtml",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Account\\Register.cshtml",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Account\\Register.cshtml",
@@ -315,7 +328,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "tasks-luxury.css",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\tasks-luxury.css",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\wwwroot\\css\\tasks-luxury.css",
@@ -328,7 +341,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "Create.cshtml",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\Tasks\\Create.cshtml",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\Tasks\\Create.cshtml",
@@ -341,7 +354,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "index-list.css",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\index-list.css",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\wwwroot\\css\\index-list.css",
@@ -354,7 +367,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "lux_layout.css",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
@@ -368,19 +381,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 13,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
-              "RelativeDocumentMoniker": "AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
-              "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
-              "RelativeToolTip": "AIHubTaskDashboard\\Views\\KPI\\Index.cshtml",
-              "ViewState": "AgIAAEwDAAAAAAAAAAAQwHADAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-29T08:45:49.123Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
               "Title": "site.css",
               "DocumentMoniker": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\site.css",
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\wwwroot\\css\\site.css",

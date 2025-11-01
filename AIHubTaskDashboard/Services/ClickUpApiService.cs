@@ -355,7 +355,6 @@ namespace AIHubTaskDashboard.Services
 			}
 		}
 
-		// ✅ DELETE Task
 		public async Task<bool> DeleteTaskAsync(string clickupId)
 		{
 			try
