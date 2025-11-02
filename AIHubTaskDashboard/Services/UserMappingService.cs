@@ -457,7 +457,7 @@ namespace AIHubTaskDashboard.Services
 					_logger.LogInformation("🔄 [MAPPING] Trying LOCAL UsersController");
 
 					// 🔥 FIX: Get port from config or use default
-					var localBaseUrl = _config["ApiSettings:LocalBaseUrl"] ?? "http://localhost:5076/";
+					var localBaseUrl = _config["ApiSettings:LocalBaseUrl"] ?? "https://localhost:7291/";
 
 					using var localClient = new HttpClient();
 					localClient.BaseAddress = new Uri(localBaseUrl);
