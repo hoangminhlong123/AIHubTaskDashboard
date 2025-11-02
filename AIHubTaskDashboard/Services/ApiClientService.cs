@@ -1,6 +1,5 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
-
 namespace AIHubTaskDashboard.Services
 {
 	public class ApiClientService
@@ -13,6 +12,9 @@ namespace AIHubTaskDashboard.Services
 			_httpClient = httpClient;
 			_contextAccessor = accessor;
 			_httpClient.BaseAddress = new Uri(config["ApiSettings:BaseUrl"]!);
+
+			// 🔥 THÊM DÒNG NÀY - Tăng timeout lên 90s
+			_httpClient.Timeout = TimeSpan.FromSeconds(90);
 		}
 
 		private void AddAuthHeader()
@@ -27,22 +29,22 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.GetAsync(endpoint);
 			var content = await response.Content.ReadAsStringAsync();
-
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"GET {endpoint} failed: {response.StatusCode} - {content}");
-
 			return content;
 		}
 
 		public async Task<string> PostAsync(string endpoint, object data)
 		{
 			AddAuthHeader();
+
+			// 🔥 THÊM DÒNG NÀY - Log trước khi gọi API
+			Console.WriteLine($"📤 [POST] {endpoint} - Timeout: {_httpClient.Timeout.TotalSeconds}s");
+
 			var response = await _httpClient.PostAsJsonAsync(endpoint, data);
 			var content = await response.Content.ReadAsStringAsync();
-
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"POST {endpoint} failed: {response.StatusCode} - {content}");
-
 			return content;
 		}
 
@@ -51,10 +53,8 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.PutAsJsonAsync(endpoint, data);
 			var content = await response.Content.ReadAsStringAsync();
-
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"PUT {endpoint} failed: {response.StatusCode} - {content}");
-
 			return content;
 		}
 
@@ -63,10 +63,8 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.PatchAsJsonAsync(endpoint, data);
 			var content = await response.Content.ReadAsStringAsync();
-
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"PATCH {endpoint} failed: {response.StatusCode} - {content}");
-
 			return content;
 		}
 
@@ -75,10 +73,8 @@ namespace AIHubTaskDashboard.Services
 			AddAuthHeader();
 			var response = await _httpClient.DeleteAsync(endpoint);
 			var content = await response.Content.ReadAsStringAsync();
-
 			if (!response.IsSuccessStatusCode)
 				throw new Exception($"DELETE {endpoint} failed: {response.StatusCode} - {content}");
-
 			return content;
 		}
 	}

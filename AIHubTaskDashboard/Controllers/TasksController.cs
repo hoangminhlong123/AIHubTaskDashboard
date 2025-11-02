@@ -573,11 +573,24 @@ namespace AIHubTaskDashboard.Controllers
 		{
 			try
 			{
-				_logger.LogInformation($"🔄 [EDIT] Updating task: {id}");
+				_logger.LogInformation($"🔄 [EDIT] Starting update for task: {id}");
+				_logger.LogInformation($"📋 [EDIT] Title: {title}");
+				_logger.LogInformation($"📊 [EDIT] Status: {status}");
+				_logger.LogInformation($"📈 [EDIT] Progress: {progress_percentage}%");
+				_logger.LogInformation($"👤 [EDIT] Assignee ID: {assignee_id}");
 				_logger.LogInformation($"🏷️ [EDIT] Tags: {tags ?? "none"}");
 
+				// 🔥 STEP 1: Get existing task
 				var taskRes = await _api.GetAsync($"api/v1/tasks/{id}");
+				if (string.IsNullOrEmpty(taskRes))
+				{
+					_logger.LogError($"❌ [EDIT] Task not found: {id}");
+					TempData["Error"] = "Task không tồn tại.";
+					return RedirectToAction("Index");
+				}
+
 				var task = JsonDocument.Parse(taskRes).RootElement;
+				_logger.LogInformation($"✅ [EDIT] Found task: {id}");
 
 				// Parse tags
 				List<string> tagsList = new List<string>();
@@ -586,24 +599,63 @@ namespace AIHubTaskDashboard.Controllers
 					tagsList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
 						.Select(t => t.Trim())
 						.Where(t => !string.IsNullOrEmpty(t))
+						.Distinct() // 🔥 Remove duplicates
 						.ToList();
+					_logger.LogInformation($"🏷️ [EDIT] Parsed {tagsList.Count} tags: {string.Join(", ", tagsList)}");
 				}
 
-				// Update Dashboard first
+				// 🔥 STEP 2: Validate required fields
+				if (string.IsNullOrWhiteSpace(title))
+				{
+					_logger.LogWarning("⚠️ [EDIT] Title is empty");
+					TempData["Error"] = "Tiêu đề không được để trống.";
+					return RedirectToAction("Edit", new { id });
+				}
+
+				if (!new[] { "To Do", "In Progress", "Completed" }.Contains(status))
+				{
+					_logger.LogWarning($"⚠️ [EDIT] Invalid status: {status}");
+					TempData["Error"] = "Trạng thái không hợp lệ.";
+					return RedirectToAction("Edit", new { id });
+				}
+
+				if (progress_percentage < 0 || progress_percentage > 100)
+				{
+					_logger.LogWarning($"⚠️ [EDIT] Invalid progress: {progress_percentage}");
+					TempData["Error"] = "Tiến độ phải từ 0-100%.";
+					return RedirectToAction("Edit", new { id });
+				}
+
+				// 🔥 STEP 3: Update Dashboard FIRST (without tags)
 				var payload = new
 				{
-					title,
-					description,
+					title = title.Trim(),
+					description = description?.Trim() ?? "",
 					status,
 					progress_percentage,
-					assignee_id
+					assignee_id = assignee_id ?? 0
 				};
 
 				_logger.LogInformation($"📤 [EDIT] Updating Dashboard task {id}");
-				await _api.PutAsync($"api/v1/tasks/{id}", payload);
-				_logger.LogInformation($"✅ [EDIT] Dashboard updated: {id}");
+				_logger.LogInformation($"📦 [EDIT] Payload: {JsonSerializer.Serialize(payload)}");
 
-				// Sync to ClickUp if has valid clickup_id
+				try
+				{
+					var dashboardResponse = await _api.PutAsync($"api/v1/tasks/{id}", payload);
+					_logger.LogInformation($"✅ [EDIT] Dashboard updated successfully: {id}");
+					_logger.LogInformation($"📥 [EDIT] Response: {dashboardResponse}");
+				}
+				catch (Exception dashEx)
+				{
+					_logger.LogError($"❌ [EDIT] Dashboard update failed: {dashEx.Message}");
+					_logger.LogError($"❌ [EDIT] Exception type: {dashEx.GetType().Name}");
+					_logger.LogError($"❌ [EDIT] Stack trace: {dashEx.StackTrace}");
+
+					TempData["Error"] = $"Cập nhật thất bại: {dashEx.Message}";
+					return RedirectToAction("Edit", new { id });
+				}
+
+				// 🔥 STEP 4: Sync to ClickUp (if valid clickup_id)
 				if (task.TryGetProperty("clickup_id", out var clickupIdProp))
 				{
 					var clickupId = clickupIdProp.GetString();
@@ -613,12 +665,31 @@ namespace AIHubTaskDashboard.Controllers
 						try
 						{
 							_logger.LogInformation($"🔄 [EDIT] Syncing to ClickUp: {clickupId}");
-							await _clickUp.UpdateTaskAsync(clickupId, title, description, status, assignee_id, tagsList);
-							_logger.LogInformation($"✅ [EDIT] ClickUp synced: {clickupId}");
+							_logger.LogInformation($"🏷️ [EDIT] Syncing tags: {string.Join(", ", tagsList)}");
+
+							await _clickUp.UpdateTaskAsync(
+								clickupId,
+								title.Trim(),
+								description?.Trim() ?? "",
+								status,
+								assignee_id,
+								tagsList
+							);
+
+							_logger.LogInformation($"✅ [EDIT] ClickUp synced successfully: {clickupId}");
+
+							ClearTagsCache(); // 🔥 Clear cache after sync
+						}
+						catch (HttpRequestException httpEx)
+						{
+							_logger.LogWarning($"⚠️ [EDIT] ClickUp HTTP error: {httpEx.Message}");
+							_logger.LogWarning($"⚠️ [EDIT] Status code: {httpEx.StatusCode}");
+							TempData["Warning"] = "Task đã cập nhật trong Dashboard nhưng không sync được với ClickUp. Vui lòng thử lại sau.";
 						}
 						catch (Exception clickUpEx)
 						{
 							_logger.LogWarning($"⚠️ [EDIT] ClickUp sync failed: {clickUpEx.Message}");
+							_logger.LogWarning($"⚠️ [EDIT] Exception type: {clickUpEx.GetType().Name}");
 							TempData["Warning"] = "Task đã cập nhật trong Dashboard nhưng không sync được với ClickUp.";
 						}
 					}
@@ -627,16 +698,28 @@ namespace AIHubTaskDashboard.Controllers
 						_logger.LogWarning($"⚠️ [EDIT] Task has placeholder clickup_id, skipping sync: {clickupId}");
 						TempData["Warning"] = "Task có placeholder ClickUp ID, không thể sync.";
 					}
+					else
+					{
+						_logger.LogWarning($"⚠️ [EDIT] Task has no clickup_id, skipping sync");
+						TempData["Warning"] = "Task chưa có ClickUp ID, không thể sync.";
+					}
 				}
 
-				ClearTagsCache(); // 🔥 Clear cache after edit
-
-				TempData["Success"] = "Task đã được cập nhật!";
+				_logger.LogInformation($"✅ [EDIT] Task update completed: {id}");
+				TempData["Success"] = "Task đã được cập nhật thành công!";
 				return RedirectToAction("Index");
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ [EDIT] Update error: {ex.Message}");
+				_logger.LogError($"❌ [EDIT] Critical error: {ex.Message}");
+				_logger.LogError($"❌ [EDIT] Exception type: {ex.GetType().Name}");
+				_logger.LogError($"❌ [EDIT] Stack trace: {ex.StackTrace}");
+
+				if (ex.InnerException != null)
+				{
+					_logger.LogError($"❌ [EDIT] Inner exception: {ex.InnerException.Message}");
+				}
+
 				TempData["Error"] = $"Cập nhật Task thất bại: {ex.Message}";
 				return RedirectToAction("Edit", new { id });
 			}

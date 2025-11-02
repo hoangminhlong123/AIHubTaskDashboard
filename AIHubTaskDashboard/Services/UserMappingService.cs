@@ -11,6 +11,7 @@ namespace AIHubTaskDashboard.Services
 		private readonly string _clickUpToken;
 		private readonly string _teamId;
 		private readonly ILogger<UserMappingService> _logger;
+		private readonly IConfiguration _config;
 
 		private Dictionary<string, int>? _cachedMapping;
 		private DateTime _lastCacheUpdate = DateTime.MinValue;
@@ -23,22 +24,40 @@ namespace AIHubTaskDashboard.Services
 		{
 			_apiClient = apiClient;
 			_logger = logger;
+			_config = config;
 			_httpClient = new HttpClient();
 			_clickUpToken = config["ClickUpSettings:Token"] ?? "";
 			_teamId = config["ClickUpSettings:TeamId"] ?? "90181891084";
 
 			var baseUrl = config["ClickUpSettings:ApiBaseUrl"] ?? "https://api.clickup.com/api/v2/";
 			_httpClient.BaseAddress = new Uri(baseUrl);
-			_httpClient.DefaultRequestHeaders.Authorization =
-				new System.Net.Http.Headers.AuthenticationHeaderValue(_clickUpToken);
+
+			// 🔥 FIX CRITICAL: ClickUp yêu cầu token TRỰC TIẾP, KHÔNG dùng AuthenticationHeaderValue
+			_httpClient.DefaultRequestHeaders.Clear();
+			_httpClient.DefaultRequestHeaders.Add("Authorization", _clickUpToken);
 			_httpClient.DefaultRequestHeaders.Add("User-Agent", "AIHubTaskDashboard");
+			_httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+			_logger.LogInformation("═══════════════════════════════════════════════════════");
+			_logger.LogInformation("🔧 UserMappingService Initialized");
+			_logger.LogInformation($"🔗 ClickUp Base URL: {baseUrl}");
+			_logger.LogInformation($"🔑 Token: {_clickUpToken.Substring(0, Math.Min(15, _clickUpToken.Length))}... ({_clickUpToken.Length} chars)");
+			_logger.LogInformation($"👥 Team ID: {_teamId}");
+			_logger.LogInformation($"✅ Auth Header: {(_httpClient.DefaultRequestHeaders.Contains("Authorization") ? "SET" : "MISSING")}");
+			_logger.LogInformation("═══════════════════════════════════════════════════════");
 		}
 
 		/// <summary>
 		/// Map ClickUp user ID sang Dashboard user ID
 		/// </summary>
-		public async Task<int?> MapClickUpUserToDashboard(string clickUpUserId)
+		public async Task<int?> MapClickUpUserToDashboard(string? clickUpUserId)
 		{
+			if (string.IsNullOrEmpty(clickUpUserId))
+			{
+				_logger.LogDebug("⚠️ [MAPPING] Empty ClickUp user ID");
+				return null;
+			}
+
 			try
 			{
 				_logger.LogInformation($"🔍 [MAPPING] Mapping ClickUp user: {clickUpUserId}");
@@ -53,8 +72,8 @@ namespace AIHubTaskDashboard.Services
 
 				_logger.LogWarning($"⚠️ [MAPPING] No mapping found for ClickUp user: {clickUpUserId}");
 
+				// Try to get more info for debugging
 				var clickUpUserInfo = await GetClickUpUserInfo(clickUpUserId);
-
 				if (clickUpUserInfo != null)
 				{
 					var email = GetPropertySafe(clickUpUserInfo.Value, "email");
@@ -74,8 +93,14 @@ namespace AIHubTaskDashboard.Services
 		/// <summary>
 		/// Map Dashboard user ID sang ClickUp user ID
 		/// </summary>
-		public async Task<string?> MapDashboardUserToClickUp(int dashboardUserId)
+		public async Task<string?> MapDashboardUserToClickUp(int? dashboardUserId)
 		{
+			if (!dashboardUserId.HasValue || dashboardUserId.Value <= 0)
+			{
+				_logger.LogDebug("⚠️ [MAPPING] Invalid Dashboard user ID");
+				return null;
+			}
+
 			try
 			{
 				_logger.LogInformation($"🔍 [MAPPING] Mapping Dashboard user: {dashboardUserId}");
@@ -84,7 +109,7 @@ namespace AIHubTaskDashboard.Services
 
 				foreach (var kvp in mapping)
 				{
-					if (kvp.Value == dashboardUserId)
+					if (kvp.Value == dashboardUserId.Value)
 					{
 						_logger.LogInformation($"✅ [MAPPING] Mapped Dashboard user {dashboardUserId} → ClickUp user {kvp.Key}");
 						return kvp.Key;
@@ -94,7 +119,7 @@ namespace AIHubTaskDashboard.Services
 				_logger.LogWarning($"⚠️ [MAPPING] No mapping found for Dashboard user: {dashboardUserId}");
 
 				// 🔥 FALLBACK: Thử tìm trong Dashboard xem có clickup_id không
-				var dashboardUserInfo = await GetDashboardUserInfo(dashboardUserId);
+				var dashboardUserInfo = await GetDashboardUserInfo(dashboardUserId.Value);
 				if (dashboardUserInfo != null &&
 					dashboardUserInfo.Value.TryGetProperty("clickup_id", out var clickupIdProp))
 				{
@@ -127,7 +152,7 @@ namespace AIHubTaskDashboard.Services
 			{
 				_logger.LogInformation($"🌐 [MAPPING] Fetching Dashboard user info: {userId}");
 
-				var endpoints = new[] { $"api/v1/members/{userId}", $"api/v1/users/{userId}" };
+				var endpoints = new[] { $"api/v1/users/{userId}", $"api/v1/members/{userId}" };
 
 				foreach (var endpoint in endpoints)
 				{
@@ -168,6 +193,7 @@ namespace AIHubTaskDashboard.Services
 				if (!response.IsSuccessStatusCode)
 				{
 					_logger.LogError($"❌ [MAPPING] Failed to fetch user: {response.StatusCode}");
+					_logger.LogDebug($"Response: {content}");
 					return null;
 				}
 
@@ -181,22 +207,24 @@ namespace AIHubTaskDashboard.Services
 			}
 		}
 
-
 		/// <summary>
-		/// Lấy mapping giữa ClickUp và Dashboard users - IMPROVED VERSION với LOCAL PRIORITY
+		/// Lấy mapping giữa ClickUp và Dashboard users
 		/// Key: ClickUp user ID, Value: Dashboard user ID
 		/// </summary>
 		private async Task<Dictionary<string, int>> GetUserMapping()
 		{
+			// Check cache first
 			if (_cachedMapping != null && DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
 			{
-				_logger.LogInformation($"✅ [MAPPING] Using cached mapping ({_cachedMapping.Count} entries)");
+				_logger.LogInformation($"✅ [MAPPING] Using cached mapping ({_cachedMapping.Count} entries, age: {(DateTime.UtcNow - _lastCacheUpdate).TotalMinutes:F1} min)");
 				return _cachedMapping;
 			}
 
 			try
 			{
-				_logger.LogInformation("🔄 [MAPPING] Building user mapping...");
+				_logger.LogInformation("┌─────────────────────────────────────────────────────┐");
+				_logger.LogInformation("│  🔄 BUILDING USER MAPPING                          │");
+				_logger.LogInformation("└─────────────────────────────────────────────────────┘");
 
 				var clickUpUsers = await GetClickUpUsers();
 				_logger.LogInformation($"📥 [MAPPING] Fetched {clickUpUsers.Count} users from ClickUp");
@@ -245,7 +273,7 @@ namespace AIHubTaskDashboard.Services
 							if (!string.IsNullOrEmpty(dbClickUpIdStr) && dbClickUpIdStr == clickUpId)
 							{
 								mapping[clickUpId] = dbId;
-								_logger.LogInformation($"✅ [MAPPING] Mapped by clickup_id: {clickUpId} → Dashboard:{dbId}");
+								_logger.LogInformation($"✅ [MAPPING] ✓ clickup_id: ClickUp {clickUpId} → Dashboard {dbId}");
 								mapped = true;
 								break;
 							}
@@ -257,7 +285,7 @@ namespace AIHubTaskDashboard.Services
 							if (clickUpEmail == dbEmail)
 							{
 								mapping[clickUpId] = dbId;
-								_logger.LogInformation($"✅ [MAPPING] Mapped by email: {clickUpEmail} | ClickUp:{clickUpId} → Dashboard:{dbId}");
+								_logger.LogInformation($"✅ [MAPPING] ✓ email: {clickUpEmail} | ClickUp {clickUpId} → Dashboard {dbId}");
 								mapped = true;
 								break;
 							}
@@ -274,7 +302,7 @@ namespace AIHubTaskDashboard.Services
 								if (cuPrefix == dbPrefix)
 								{
 									mapping[clickUpId] = dbId;
-									_logger.LogInformation($"✅ [MAPPING] Mapped by email prefix: {cuPrefix} | ClickUp:{clickUpId} → Dashboard:{dbId}");
+									_logger.LogInformation($"✅ [MAPPING] ✓ email prefix: {cuPrefix} | ClickUp {clickUpId} → Dashboard {dbId}");
 									mapped = true;
 									break;
 								}
@@ -287,7 +315,7 @@ namespace AIHubTaskDashboard.Services
 							if (clickUpUsername == dbUsername)
 							{
 								mapping[clickUpId] = dbId;
-								_logger.LogInformation($"✅ [MAPPING] Mapped by username: {clickUpUsername} | ClickUp:{clickUpId} → Dashboard:{dbId}");
+								_logger.LogInformation($"✅ [MAPPING] ✓ username: {clickUpUsername} | ClickUp {clickUpId} → Dashboard {dbId}");
 								mapped = true;
 								break;
 							}
@@ -299,14 +327,16 @@ namespace AIHubTaskDashboard.Services
 							var cleanClickUp = NormalizeName(clickUpUsername);
 							var cleanDb = NormalizeName(dbName);
 
+							// Contains match
 							if (cleanClickUp.Contains(cleanDb) || cleanDb.Contains(cleanClickUp))
 							{
 								mapping[clickUpId] = dbId;
-								_logger.LogInformation($"✅ [MAPPING] Mapped by name fuzzy: '{dbName}' ≈ '{clickUpUsername}' | ClickUp:{clickUpId} → Dashboard:{dbId}");
+								_logger.LogInformation($"✅ [MAPPING] ✓ name fuzzy: '{dbName}' ≈ '{clickUpUsername}' | ClickUp {clickUpId} → Dashboard {dbId}");
 								mapped = true;
 								break;
 							}
 
+							// Word matching
 							var cuWords = cleanClickUp.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 							var dbWords = cleanDb.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
@@ -314,7 +344,7 @@ namespace AIHubTaskDashboard.Services
 							if (matchCount >= 2 || (matchCount == 1 && (cuWords.Length == 1 || dbWords.Length == 1)))
 							{
 								mapping[clickUpId] = dbId;
-								_logger.LogInformation($"✅ [MAPPING] Mapped by word match ({matchCount} words): '{dbName}' ≈ '{clickUpUsername}' | ClickUp:{clickUpId} → Dashboard:{dbId}");
+								_logger.LogInformation($"✅ [MAPPING] ✓ word match ({matchCount} words): '{dbName}' ≈ '{clickUpUsername}' | ClickUp {clickUpId} → Dashboard {dbId}");
 								mapped = true;
 								break;
 							}
@@ -327,8 +357,12 @@ namespace AIHubTaskDashboard.Services
 					}
 				}
 
+				// Report unmapped users
 				if (unmappedClickUpUsers.Count > 0)
 				{
+					_logger.LogWarning("┌─────────────────────────────────────────────────────┐");
+					_logger.LogWarning("│  ⚠️ UNMAPPED CLICKUP USERS                          │");
+					_logger.LogWarning("└─────────────────────────────────────────────────────┘");
 					_logger.LogWarning($"⚠️ [MAPPING] {unmappedClickUpUsers.Count} ClickUp users could not be mapped:");
 					foreach (var user in unmappedClickUpUsers)
 					{
@@ -336,17 +370,21 @@ namespace AIHubTaskDashboard.Services
 					}
 				}
 
+				// Update cache
 				_cachedMapping = mapping;
 				_lastCacheUpdate = DateTime.UtcNow;
 
-				_logger.LogInformation($"✅ [MAPPING] User mapping completed: {mapping.Count} mappings created");
-				_logger.LogInformation($"📊 [MAPPING] Summary: {clickUpUsers.Count} ClickUp users, {dashboardUsers.Count} Dashboard users, {mapping.Count} mapped");
+				_logger.LogInformation("┌─────────────────────────────────────────────────────┐");
+				_logger.LogInformation("│  ✅ USER MAPPING COMPLETED                          │");
+				_logger.LogInformation("└─────────────────────────────────────────────────────┘");
+				_logger.LogInformation($"📊 [MAPPING] ClickUp: {clickUpUsers.Count} | Dashboard: {dashboardUsers.Count} | Mapped: {mapping.Count}");
 
 				return mapping;
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError($"❌ [MAPPING] GetUserMapping error: {ex.Message}");
+				_logger.LogError($"   StackTrace: {ex.StackTrace}");
 				return _cachedMapping ?? new Dictionary<string, int>();
 			}
 		}
@@ -365,7 +403,8 @@ namespace AIHubTaskDashboard.Services
 
 				if (!response.IsSuccessStatusCode)
 				{
-					_logger.LogError($"❌ [MAPPING] Failed to fetch ClickUp users: {response.StatusCode} - {content}");
+					_logger.LogError($"❌ [MAPPING] Failed to fetch ClickUp users: {response.StatusCode}");
+					_logger.LogDebug($"Response: {content}");
 					return new List<JsonElement>();
 				}
 
@@ -386,7 +425,7 @@ namespace AIHubTaskDashboard.Services
 						var email = GetPropertySafe(user, "email");
 						var username = GetPropertySafe(user, "username");
 
-						_logger.LogInformation($"   👤 ClickUp User: ID={userId}, Email={email}, Username={username}");
+						_logger.LogInformation($"   👤 ClickUp: ID={userId}, Email={email}, Username={username}");
 					}
 
 					users.Add(user);
@@ -404,7 +443,7 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		/// <summary>
-		/// Lấy danh sách users từ Dashboard - ƯU TIÊN UsersController (ClickUp users)
+		/// Lấy danh sách users từ Dashboard - ƯU TIÊN LOCAL UsersController
 		/// </summary>
 		private async Task<List<JsonElement>> GetDashboardUsers()
 		{
@@ -412,17 +451,19 @@ namespace AIHubTaskDashboard.Services
 			{
 				_logger.LogInformation("🌐 [MAPPING] Fetching Dashboard users");
 
-				// 🔥 THAY ĐỔI: Lấy từ UsersController LOCAL thay vì backend API
+				// 🔥 OPTION 1: Try LOCAL UsersController first
 				try
 				{
-					_logger.LogInformation("🔄 [MAPPING] Trying LOCAL UsersController first");
+					_logger.LogInformation("🔄 [MAPPING] Trying LOCAL UsersController");
 
-					// Tạo HTTP client để gọi local endpoint
+					// 🔥 FIX: Get port from config or use default
+					var localBaseUrl = _config["ApiSettings:LocalBaseUrl"] ?? "https://localhost:7291/";
+
 					using var localClient = new HttpClient();
-					localClient.BaseAddress = new Uri("http://localhost:5076/"); // hoặc https://localhost:7291/
+					localClient.BaseAddress = new Uri(localBaseUrl);
 					localClient.Timeout = TimeSpan.FromSeconds(10);
 
-					var localResponse = await localClient.GetAsync("api/v1/users"); // 🔥 ĐỔI TÊN
+					var localResponse = await localClient.GetAsync("api/v1/users");
 					var content = await localResponse.Content.ReadAsStringAsync();
 
 					if (localResponse.IsSuccessStatusCode && !string.IsNullOrEmpty(content))
@@ -439,14 +480,14 @@ namespace AIHubTaskDashboard.Services
 								var name = GetPropertySafe(user, "name");
 								var clickupId = GetPropertySafe(user, "clickup_id");
 
-								_logger.LogInformation($"   👤 Local User: ID={userId}, Email={email}, Name={name}, ClickUpID={clickupId}");
+								_logger.LogInformation($"   👤 Local: ID={userId}, Email={email}, Name={name}, ClickUpID={clickupId}");
 								users.Add(user);
 							}
 						}
 
 						if (users.Count > 0)
 						{
-							_logger.LogInformation($"✅ [MAPPING] Fetched {users.Count} users from LOCAL UsersController");
+							_logger.LogInformation($"✅ [MAPPING] Fetched {users.Count} users from LOCAL");
 							return users;
 						}
 					}
@@ -456,26 +497,28 @@ namespace AIHubTaskDashboard.Services
 					_logger.LogWarning($"⚠️ [MAPPING] Local UsersController failed: {localEx.Message}");
 				}
 
-				// Fallback: Thử backend API
-				string backendResponse = null; // 🔥 ĐỔI TÊN
+				// 🔥 OPTION 2: Fallback to backend API via ApiClientService
+				_logger.LogInformation("🔄 [MAPPING] Trying backend API");
+
+				string? backendResponse = null;
 				var endpoints = new[] { "api/v1/users", "api/v1/members" };
 
 				foreach (var endpoint in endpoints)
 				{
 					try
 					{
-						_logger.LogInformation($"🔄 [MAPPING] Trying backend endpoint: {endpoint}");
-						backendResponse = await _apiClient.GetAsync(endpoint); // 🔥 ĐỔI TÊN
+						_logger.LogInformation($"   Trying: {endpoint}");
+						backendResponse = await _apiClient.GetAsync(endpoint);
 
 						if (!string.IsNullOrEmpty(backendResponse))
 						{
-							_logger.LogInformation($"✅ [MAPPING] Successfully fetched from: {endpoint}");
+							_logger.LogInformation($"✅ [MAPPING] Got response from: {endpoint}");
 							break;
 						}
 					}
 					catch (Exception apiEx)
 					{
-						_logger.LogWarning($"⚠️ [MAPPING] Endpoint {endpoint} failed: {apiEx.Message}");
+						_logger.LogWarning($"⚠️ [MAPPING] {endpoint} failed: {apiEx.Message}");
 						continue;
 					}
 				}
@@ -486,7 +529,7 @@ namespace AIHubTaskDashboard.Services
 					return new List<JsonElement>();
 				}
 
-				var backendData = JsonDocument.Parse(backendResponse).RootElement; // 🔥 ĐỔI TÊN
+				var backendData = JsonDocument.Parse(backendResponse).RootElement;
 				var backendUsers = new List<JsonElement>();
 
 				if (backendData.ValueKind == JsonValueKind.Array)
@@ -497,7 +540,7 @@ namespace AIHubTaskDashboard.Services
 						var email = GetPropertySafe(user, "email");
 						var name = GetPropertySafe(user, "name");
 
-						_logger.LogInformation($"   👤 Backend User: ID={userId}, Email={email}, Name={name}");
+						_logger.LogInformation($"   👤 Backend: ID={userId}, Email={email}, Name={name}");
 						backendUsers.Add(user);
 					}
 				}
@@ -512,7 +555,6 @@ namespace AIHubTaskDashboard.Services
 				return new List<JsonElement>();
 			}
 		}
-
 
 		/// <summary>
 		/// Normalize name for fuzzy matching (remove diacritics, extra spaces, lowercase)

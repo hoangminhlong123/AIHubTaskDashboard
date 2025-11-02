@@ -8,12 +8,13 @@ using Microsoft.Extensions.Configuration;
 namespace AIHubTaskDashboard.Services
 {
 	/// <summary>
-	/// ⚡ ULTRA FAST MODE with DETAILED LOGGING + FIXED AUTHENTICATION
+	/// ⚡ ULTRA FAST MODE with DETAILED LOGGING + FIXED AUTHENTICATION + HttpClientFactory
 	/// </summary>
 	public class ClickUpService
 	{
-		private readonly HttpClient _httpClient;
+		private readonly IHttpClientFactory _httpClientFactory; // 🔥 CHANGED: Use factory instead
 		private readonly string _token;
+		private readonly string _baseUrl; // 🔥 ADDED: Store base URL
 		private readonly ILogger<ClickUpService> _logger;
 		private readonly ApiClientService _apiClient;
 		private readonly UserMappingService _userMapping;
@@ -23,37 +24,41 @@ namespace AIHubTaskDashboard.Services
 			IConfiguration config,
 			ILogger<ClickUpService> logger,
 			ApiClientService apiClient,
-			UserMappingService userMapping)
+			UserMappingService userMapping,
+			IHttpClientFactory httpClientFactory) // 🔥 ADDED: Inject factory
 		{
-			_httpClient = new HttpClient();
+			_httpClientFactory = httpClientFactory;
 			_token = config["ClickUpSettings:Token"] ?? "";
 			_logger = logger;
 			_apiClient = apiClient;
 			_userMapping = userMapping;
 			_config = config;
 
-			var baseUrl = config["ClickUpSettings:ApiBaseUrl"] ?? "https://api.clickup.com/api/v2/";
-			_httpClient.BaseAddress = new Uri(baseUrl);
-
-			// 🔥 CRITICAL FIX: Match ClickUpApiService's working header setup
-			_httpClient.DefaultRequestHeaders.Clear();
-			_httpClient.DefaultRequestHeaders.Add("Authorization", _token);
-			_httpClient.DefaultRequestHeaders.Accept.Clear();
-			_httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-			_httpClient.Timeout = TimeSpan.FromSeconds(30);
+			_baseUrl = config["ClickUpSettings:ApiBaseUrl"] ?? "https://api.clickup.com/api/v2/";
 
 			_logger.LogInformation("🔧 [INIT] ClickUpService initialized");
-			_logger.LogInformation($"🔧 [INIT] Base URL: {baseUrl}");
+			_logger.LogInformation($"🔧 [INIT] Base URL: {_baseUrl}");
 			_logger.LogInformation($"🔧 [INIT] Token: {_token.Substring(0, Math.Min(15, _token.Length))}...");
 			_logger.LogInformation($"🔧 [INIT] Token length: {_token.Length}");
-			_logger.LogInformation($"🔧 [INIT] Authorization header set: {_httpClient.DefaultRequestHeaders.Contains("Authorization")}");
 
 			// 🔥 CRITICAL: Verify token format
 			if (!_token.StartsWith("pk_"))
 			{
 				_logger.LogError("❌ [INIT] Invalid token format! ClickUp tokens should start with 'pk_'");
 			}
+		}
+
+		// 🔥 NEW METHOD: Create HttpClient per request to avoid ObjectDisposedException
+		private HttpClient CreateHttpClient()
+		{
+			var client = _httpClientFactory.CreateClient();
+			client.BaseAddress = new Uri(_baseUrl);
+			client.DefaultRequestHeaders.Clear();
+			client.DefaultRequestHeaders.Add("Authorization", _token);
+			client.DefaultRequestHeaders.Accept.Clear();
+			client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+			client.Timeout = TimeSpan.FromSeconds(30);
+			return client;
 		}
 
 		public async Task HandleWebhookEventAsync(string eventType, JsonElement payload)
@@ -501,22 +506,26 @@ namespace AIHubTaskDashboard.Services
 		}
 
 		// =============================
-		// 🌐 Fetch Task từ ClickUp API (FIXED)
+		// 🌐 FETCH TASK FROM CLICKUP (FIXED WITH HttpClientFactory)
 		// =============================
 		private async Task<string?> FetchTaskFromClickUp(string taskId)
 		{
+			// 🔥 CREATE NEW CLIENT PER REQUEST
+			using var httpClient = CreateHttpClient();
+
 			try
 			{
 				var url = $"task/{taskId}";
-				_logger.LogInformation($"🌐 [FETCH] Calling ClickUp API: {url}");
-				_logger.LogInformation($"🌐 [FETCH] Full URL: {_httpClient.BaseAddress}{url}");
+				_logger.LogInformation("┌─────────────────────────────────────────────────────┐");
+				_logger.LogInformation("│  🌐 FETCHING TASK FROM CLICKUP                      │");
+				_logger.LogInformation("└─────────────────────────────────────────────────────┘");
+				_logger.LogInformation($"🔗 [FETCH] URL: {httpClient.BaseAddress}{url}");
+				_logger.LogInformation($"🔑 [FETCH] Token: {_token.Substring(0, Math.Min(15, _token.Length))}...");
+				_logger.LogInformation($"📋 [FETCH] Headers:");
 
-				// 🔍 DEBUG: Log all headers being sent
-				_logger.LogInformation($"🔍 [FETCH] Request Headers:");
-				foreach (var header in _httpClient.DefaultRequestHeaders)
+				foreach (var header in httpClient.DefaultRequestHeaders)
 				{
 					var value = string.Join(", ", header.Value);
-					// Mask token for security
 					if (header.Key == "Authorization" && value.Length > 20)
 					{
 						value = value.Substring(0, 15) + "...";
@@ -524,16 +533,20 @@ namespace AIHubTaskDashboard.Services
 					_logger.LogInformation($"   - {header.Key}: {value}");
 				}
 
-				// 🔥 CRITICAL: Don't create new request, use HttpClient directly
-				// This matches the working ClickUpApiService pattern
-				var response = await _httpClient.GetAsync(url);
+				_logger.LogInformation($"📤 [FETCH] Sending GET request...");
+				var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+				var response = await httpClient.GetAsync(url);
+				stopwatch.Stop();
+
+				_logger.LogInformation($"📡 [FETCH] Response received in {stopwatch.ElapsedMilliseconds}ms");
+				_logger.LogInformation($"📡 [FETCH] Status Code: {response.StatusCode} ({(int)response.StatusCode})");
+
 				var content = await response.Content.ReadAsStringAsync();
+				_logger.LogInformation($"📡 [FETCH] Content Length: {content?.Length ?? 0} chars");
 
-				_logger.LogInformation($"📡 [FETCH] Response Status: {response.StatusCode} ({(int)response.StatusCode})");
-				_logger.LogInformation($"📡 [FETCH] Response Length: {content?.Length ?? 0} chars");
-
-				// 🔍 DEBUG: Log response headers
-				_logger.LogInformation($"📡 [FETCH] Response Headers:");
+				// Log response headers
+				_logger.LogInformation($"📋 [FETCH] Response Headers:");
 				foreach (var header in response.Headers)
 				{
 					_logger.LogInformation($"   - {header.Key}: {string.Join(", ", header.Value)}");
@@ -541,11 +554,14 @@ namespace AIHubTaskDashboard.Services
 
 				if (!response.IsSuccessStatusCode)
 				{
-					_logger.LogError($"❌ [FETCH] ClickUp API Error: {response.StatusCode}");
+					_logger.LogError("┌─────────────────────────────────────────────────────┐");
+					_logger.LogError("│  ❌ CLICKUP API ERROR                               │");
+					_logger.LogError("└─────────────────────────────────────────────────────┘");
+					_logger.LogError($"❌ [FETCH] Status: {response.StatusCode}");
 					_logger.LogError($"❌ [FETCH] Request URL: {response.RequestMessage?.RequestUri}");
 					_logger.LogError($"❌ [FETCH] Response Body: {content}");
 
-					// 🔥 Try to parse error details
+					// Parse error details
 					try
 					{
 						var errorJson = JsonDocument.Parse(content);
@@ -558,32 +574,87 @@ namespace AIHubTaskDashboard.Services
 							_logger.LogError($"❌ [FETCH] Error Code: {ecodeProp.GetString()}");
 						}
 					}
-					catch { }
+					catch (Exception parseEx)
+					{
+						_logger.LogError($"❌ [FETCH] Could not parse error JSON: {parseEx.Message}");
+					}
+
+					// 🔥 IMPORTANT: Check specific error codes
+					if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+					{
+						_logger.LogError("❌ [FETCH] AUTHENTICATION FAILED");
+						_logger.LogError("   Possible issues:");
+						_logger.LogError("   1. Token is invalid or expired");
+						_logger.LogError("   2. Token doesn't have permission to access this task");
+						_logger.LogError("   3. Token format is incorrect (should be: pk_...)");
+					}
+					else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+					{
+						_logger.LogError("❌ [FETCH] TASK NOT FOUND");
+						_logger.LogError($"   Task ID '{taskId}' does not exist in ClickUp");
+					}
 
 					return null;
 				}
 
-				_logger.LogInformation($"✅ [FETCH] Successfully fetched task: {taskId}");
-				_logger.LogDebug($"📥 [FETCH] Response preview: {content.Substring(0, Math.Min(200, content.Length))}...");
+				_logger.LogInformation("┌─────────────────────────────────────────────────────┐");
+				_logger.LogInformation("│  ✅ TASK FETCHED SUCCESSFULLY                       │");
+				_logger.LogInformation("└─────────────────────────────────────────────────────┘");
+				_logger.LogInformation($"✅ [FETCH] Task ID: {taskId}");
+				_logger.LogInformation($"📥 [FETCH] Content preview (first 300 chars):");
+				_logger.LogInformation($"   {content.Substring(0, Math.Min(300, content.Length))}...");
+
+				// Parse and log task details
+				try
+				{
+					var taskJson = JsonDocument.Parse(content);
+					if (taskJson.RootElement.TryGetProperty("name", out var nameProp))
+					{
+						_logger.LogInformation($"📋 [FETCH] Task Name: {nameProp.GetString()}");
+					}
+					if (taskJson.RootElement.TryGetProperty("status", out var statusProp))
+					{
+						if (statusProp.TryGetProperty("status", out var statusStrProp))
+						{
+							_logger.LogInformation($"📊 [FETCH] Status: {statusStrProp.GetString()}");
+						}
+					}
+				}
+				catch (Exception parseEx)
+				{
+					_logger.LogWarning($"⚠️ [FETCH] Could not parse task details: {parseEx.Message}");
+				}
 
 				return content;
 			}
 			catch (HttpRequestException httpEx)
 			{
-				_logger.LogError($"❌ [FETCH] HTTP Request Exception: {httpEx.Message}");
+				_logger.LogError("┌─────────────────────────────────────────────────────┐");
+				_logger.LogError("│  ❌ HTTP REQUEST EXCEPTION                          │");
+				_logger.LogError("└─────────────────────────────────────────────────────┘");
+				_logger.LogError($"❌ [FETCH] HTTP Exception: {httpEx.Message}");
+				_logger.LogError($"❌ [FETCH] Status Code: {httpEx.StatusCode}");
 				_logger.LogError($"❌ [FETCH] Inner Exception: {httpEx.InnerException?.Message}");
+				_logger.LogError($"❌ [FETCH] Stack Trace: {httpEx.StackTrace}");
 				return null;
 			}
 			catch (TaskCanceledException timeoutEx)
 			{
-				_logger.LogError($"❌ [FETCH] Request Timeout: {timeoutEx.Message}");
+				_logger.LogError("┌─────────────────────────────────────────────────────┐");
+				_logger.LogError("│  ❌ REQUEST TIMEOUT                                 │");
+				_logger.LogError("└─────────────────────────────────────────────────────┘");
+				_logger.LogError($"❌ [FETCH] Timeout: {timeoutEx.Message}");
+				_logger.LogError($"   Request exceeded 30s timeout");
 				return null;
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ [FETCH] Exception: {ex.GetType().Name}");
+				_logger.LogError("┌─────────────────────────────────────────────────────┐");
+				_logger.LogError("│  ❌ UNKNOWN EXCEPTION                               │");
+				_logger.LogError("└─────────────────────────────────────────────────────┘");
+				_logger.LogError($"❌ [FETCH] Exception Type: {ex.GetType().Name}");
 				_logger.LogError($"❌ [FETCH] Message: {ex.Message}");
-				_logger.LogError($"❌ [FETCH] StackTrace: {ex.StackTrace}");
+				_logger.LogError($"❌ [FETCH] Stack Trace: {ex.StackTrace}");
 				return null;
 			}
 		}
@@ -730,7 +801,7 @@ namespace AIHubTaskDashboard.Services
 			_logger.LogDebug($"📈 [MAP] Progress calculation: '{status}' → {progress}%");
 			return progress;
 		}
-
+		 
 		private string ParseClickUpDate(string? dueDate)
 		{
 			if (string.IsNullOrEmpty(dueDate))

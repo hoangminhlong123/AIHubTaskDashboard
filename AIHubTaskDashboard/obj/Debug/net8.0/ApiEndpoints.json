@@ -17,6 +17,76 @@
   },
   {
     "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "FindTask",
+    "RelativePath": "api/clickup-webhook/debug/find-task",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "GetTasksFromList",
+    "RelativePath": "api/clickup-webhook/debug/get-tasks-from-list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "WebhookInfo",
+    "RelativePath": "api/clickup-webhook/debug/info",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "SimulateCreate",
+    "RelativePath": "api/clickup-webhook/debug/simulate-create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "TestConnection",
+    "RelativePath": "api/clickup-webhook/debug/test-connection",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "TestToken",
+    "RelativePath": "api/clickup-webhook/debug/test-token",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
+    "Method": "TestUserMapping",
+    "RelativePath": "api/clickup-webhook/debug/user-mapping",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIHubTaskDashboard.Controllers.ClickUpWebHookController",
     "Method": "Health",
     "RelativePath": "api/clickup-webhook/health",
     "HttpMethod": "GET",
@@ -106,6 +176,22 @@
     "Order": 0,
     "Parameters": [],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Program\u002B\u003C\u003Ec__DisplayClass0_0",
+    "Method": "\u003C\u003CMain\u003E$\u003Eb__3",
+    "RelativePath": "api/health",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "AIHUBOS.Dashboard.Controllers.TelegramController",
