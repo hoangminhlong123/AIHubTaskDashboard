@@ -1,81 +1,175 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+
 namespace AIHubTaskDashboard.Services
 {
 	public class ApiClientService
 	{
 		private readonly HttpClient _httpClient;
 		private readonly IHttpContextAccessor _contextAccessor;
+		private readonly ILogger<ApiClientService> _logger;
 
-		public ApiClientService(HttpClient httpClient, IConfiguration config, IHttpContextAccessor accessor)
+		public ApiClientService(
+			HttpClient httpClient,
+			IConfiguration config,
+			IHttpContextAccessor accessor,
+			ILogger<ApiClientService> logger)
 		{
 			_httpClient = httpClient;
 			_contextAccessor = accessor;
-			_httpClient.BaseAddress = new Uri(config["ApiSettings:BaseUrl"]!);
+			_logger = logger;
 
-			// 🔥 THÊM DÒNG NÀY - Tăng timeout lên 90s
+			_httpClient.BaseAddress = new Uri(config["ApiSettings:BaseUrl"]!);
 			_httpClient.Timeout = TimeSpan.FromSeconds(90);
+
+			_logger.LogInformation($"🔧 [API CLIENT] Initialized - Base: {_httpClient.BaseAddress}, Timeout: {_httpClient.Timeout.TotalSeconds}s");
 		}
 
-		private void AddAuthHeader()
+		private HttpRequestMessage CreateRequest(HttpMethod method, string endpoint)
 		{
+			var request = new HttpRequestMessage(method, endpoint);
+
 			var token = _contextAccessor.HttpContext?.Session.GetString("AuthToken");
-			_httpClient.DefaultRequestHeaders.Authorization =
-				token != null ? new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token) : null;
+			if (!string.IsNullOrEmpty(token))
+			{
+				request.Headers.Authorization =
+					new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+			}
+
+			return request;
 		}
 
 		public async Task<string> GetAsync(string endpoint)
 		{
-			AddAuthHeader();
-			var response = await _httpClient.GetAsync(endpoint);
-			var content = await response.Content.ReadAsStringAsync();
-			if (!response.IsSuccessStatusCode)
-				throw new Exception($"GET {endpoint} failed: {response.StatusCode} - {content}");
-			return content;
+			try
+			{
+				_logger.LogInformation($"📥 [GET] {endpoint}");
+
+				var request = CreateRequest(HttpMethod.Get, endpoint);
+				var response = await _httpClient.SendAsync(request);
+				var content = await response.Content.ReadAsStringAsync();
+
+				if (!response.IsSuccessStatusCode)
+				{
+					_logger.LogError($"❌ [GET] {endpoint} - {response.StatusCode}");
+					throw new Exception($"GET {endpoint} failed: {response.StatusCode} - {content}");
+				}
+
+				return content;
+			}
+			catch (ObjectDisposedException ex)
+			{
+				_logger.LogError($"❌ [GET] HttpClient disposed: {ex.Message}");
+				throw;
+			}
 		}
 
 		public async Task<string> PostAsync(string endpoint, object data)
 		{
-			AddAuthHeader();
+			try
+			{
+				_logger.LogInformation($"📤 [POST] {endpoint} - Timeout: {_httpClient.Timeout.TotalSeconds}s");
 
-			// 🔥 THÊM DÒNG NÀY - Log trước khi gọi API
-			Console.WriteLine($"📤 [POST] {endpoint} - Timeout: {_httpClient.Timeout.TotalSeconds}s");
+				var request = CreateRequest(HttpMethod.Post, endpoint);
+				request.Content = JsonContent.Create(data);
 
-			var response = await _httpClient.PostAsJsonAsync(endpoint, data);
-			var content = await response.Content.ReadAsStringAsync();
-			if (!response.IsSuccessStatusCode)
-				throw new Exception($"POST {endpoint} failed: {response.StatusCode} - {content}");
-			return content;
+				var response = await _httpClient.SendAsync(request);
+				var content = await response.Content.ReadAsStringAsync();
+
+				if (!response.IsSuccessStatusCode)
+				{
+					_logger.LogError($"❌ [POST] {endpoint} - {response.StatusCode}");
+					_logger.LogError($"❌ [POST] Response: {content}");
+					throw new Exception($"POST {endpoint} failed: {response.StatusCode} - {content}");
+				}
+
+				_logger.LogInformation($"✅ [POST] {endpoint} - Success");
+				return content;
+			}
+			catch (ObjectDisposedException ex)
+			{
+				_logger.LogError($"❌ [POST] HttpClient disposed: {ex.Message}");
+				throw;
+			}
 		}
 
 		public async Task<string> PutAsync(string endpoint, object data)
 		{
-			AddAuthHeader();
-			var response = await _httpClient.PutAsJsonAsync(endpoint, data);
-			var content = await response.Content.ReadAsStringAsync();
-			if (!response.IsSuccessStatusCode)
-				throw new Exception($"PUT {endpoint} failed: {response.StatusCode} - {content}");
-			return content;
+			try
+			{
+				_logger.LogInformation($"📤 [PUT] {endpoint}");
+
+				var request = CreateRequest(HttpMethod.Put, endpoint);
+				request.Content = JsonContent.Create(data);
+
+				var response = await _httpClient.SendAsync(request);
+				var content = await response.Content.ReadAsStringAsync();
+
+				if (!response.IsSuccessStatusCode)
+				{
+					_logger.LogError($"❌ [PUT] {endpoint} - {response.StatusCode}");
+					throw new Exception($"PUT {endpoint} failed: {response.StatusCode} - {content}");
+				}
+
+				return content;
+			}
+			catch (ObjectDisposedException ex)
+			{
+				_logger.LogError($"❌ [PUT] HttpClient disposed: {ex.Message}");
+				throw;
+			}
 		}
 
 		public async Task<string> PatchAsync(string endpoint, object data)
 		{
-			AddAuthHeader();
-			var response = await _httpClient.PatchAsJsonAsync(endpoint, data);
-			var content = await response.Content.ReadAsStringAsync();
-			if (!response.IsSuccessStatusCode)
-				throw new Exception($"PATCH {endpoint} failed: {response.StatusCode} - {content}");
-			return content;
+			try
+			{
+				_logger.LogInformation($"📤 [PATCH] {endpoint}");
+
+				var request = CreateRequest(HttpMethod.Patch, endpoint);
+				request.Content = JsonContent.Create(data);
+
+				var response = await _httpClient.SendAsync(request);
+				var content = await response.Content.ReadAsStringAsync();
+
+				if (!response.IsSuccessStatusCode)
+				{
+					_logger.LogError($"❌ [PATCH] {endpoint} - {response.StatusCode}");
+					throw new Exception($"PATCH {endpoint} failed: {response.StatusCode} - {content}");
+				}
+
+				return content;
+			}
+			catch (ObjectDisposedException ex)
+			{
+				_logger.LogError($"❌ [PATCH] HttpClient disposed: {ex.Message}");
+				throw;
+			}
 		}
 
 		public async Task<string> DeleteAsync(string endpoint)
 		{
-			AddAuthHeader();
-			var response = await _httpClient.DeleteAsync(endpoint);
-			var content = await response.Content.ReadAsStringAsync();
-			if (!response.IsSuccessStatusCode)
-				throw new Exception($"DELETE {endpoint} failed: {response.StatusCode} - {content}");
-			return content;
+			try
+			{
+				_logger.LogInformation($"🗑️ [DELETE] {endpoint}");
+
+				var request = CreateRequest(HttpMethod.Delete, endpoint);
+				var response = await _httpClient.SendAsync(request);
+				var content = await response.Content.ReadAsStringAsync();
+
+				if (!response.IsSuccessStatusCode)
+				{
+					_logger.LogError($"❌ [DELETE] {endpoint} - {response.StatusCode}");
+					throw new Exception($"DELETE {endpoint} failed: {response.StatusCode} - {content}");
+				}
+
+				return content;
+			}
+			catch (ObjectDisposedException ex)
+			{
+				_logger.LogError($"❌ [DELETE] HttpClient disposed: {ex.Message}");
+				throw;
+			}
 		}
 	}
 }
