@@ -45,6 +45,8 @@ builder.Services.AddScoped<ApiClientService>();
 builder.Services.AddScoped<UserMappingService>();  // ✅ CHANGED from Singleton to Scoped
 builder.Services.AddScoped<ClickUpService>();      // ✅ For webhook handling
 builder.Services.AddScoped<ClickUpApiService>();   // ✅ For API calls
+builder.Services.AddHttpClient<ApiClientService>(); // ← Dòng này
+
 
 // Logging configuration
 builder.Logging.ClearProviders();
