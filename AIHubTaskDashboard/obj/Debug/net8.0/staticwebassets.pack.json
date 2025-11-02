@@ -13,6 +13,10 @@
       "PackagePath": "staticwebassets\\css\\index-list.css"
     },
     {
+      "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\kpi-lux.css",
+      "PackagePath": "staticwebassets\\css\\kpi-lux.css"
+    },
+    {
       "Id": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
       "PackagePath": "staticwebassets\\css\\lux_layout.css"
     },

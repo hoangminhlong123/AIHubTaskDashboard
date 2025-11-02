@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "U3pPNSQq1w/04Y0AG3yyMS0Zj+UYr5GhI4S70z3jGcY=",
+  "Hash": "6x5xPJ+1QaLAuPXhxfltXir+Tt2Zy7sbFCWu/Xzajxg=",
   "Source": "AIHubTaskDashboard",
   "BasePath": "_content/AIHubTaskDashboard",
   "Mode": "Default",
@@ -99,6 +99,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\index-list.css"
+    },
+    {
+      "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\kpi-lux.css",
+      "SourceId": "AIHubTaskDashboard",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\",
+      "BasePath": "_content/AIHubTaskDashboard",
+      "RelativePath": "css/kpi-lux#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "fii8dnmgk0",
+      "Integrity": "SackgA2K7te+GnLjFGw/MGpFm3h5s5t5+CMjW0xIbAw=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\kpi-lux.css"
     },
     {
       "Identity": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\lux_layout.css",
@@ -1427,7 +1448,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
+          "Value": "Sun, 02 Nov 2025 10:35:14 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1464,7 +1485,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
+          "Value": "Sun, 02 Nov 2025 10:35:14 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1509,7 +1530,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
+          "Value": "Sun, 02 Nov 2025 10:35:14 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1554,7 +1575,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
+          "Value": "Sun, 02 Nov 2025 10:35:14 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1729,6 +1750,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-JwNy4P4Ah8fz7eFMKa8REOoeJiELxe6ba2dkq7zc194="
+        }
+      ]
+    },
+    {
+      "Route": "css/kpi-lux.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\kpi-lux.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18926"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"SackgA2K7te+GnLjFGw/MGpFm3h5s5t5+CMjW0xIbAw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Nov 2025 10:37:59 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-SackgA2K7te+GnLjFGw/MGpFm3h5s5t5+CMjW0xIbAw="
+        }
+      ]
+    },
+    {
+      "Route": "css/kpi-lux.fii8dnmgk0.css",
+      "AssetFile": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\wwwroot\\css\\kpi-lux.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18926"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"SackgA2K7te+GnLjFGw/MGpFm3h5s5t5+CMjW0xIbAw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Nov 2025 10:37:59 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "fii8dnmgk0"
+        },
+        {
+          "Name": "label",
+          "Value": "css/kpi-lux.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-SackgA2K7te+GnLjFGw/MGpFm3h5s5t5+CMjW0xIbAw="
         }
       ]
     },
