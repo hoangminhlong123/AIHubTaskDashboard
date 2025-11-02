@@ -1,0 +1,248 @@
+[
+  {
+    "id": "86evc2re6",
+    "custom_id": null,
+    "custom_item_id": 0,
+    "name": "t",
+    "text_content": "",
+    "description": "",
+    "status": {
+      "id": "sc901812388988_8wWaY1uT",
+      "status": "in progress",
+      "color": "#5f55ee",
+      "orderindex": 1,
+      "type": "custom"
+    },
+    "orderindex": "120485111.00000000000000000000000000000000",
+    "date_created": "1762103512959",
+    "date_updated": "1762103512959",
+    "date_closed": null,
+    "date_done": null,
+    "archived": false,
+    "creator": {
+      "id": 294794940,
+      "username": "Tr\u1ECDng Ph\u00FA l\u00EA",
+      "color": "#595d66",
+      "email": "phu.lt@charm.contact",
+      "profilePicture": null
+    },
+    "assignees": [],
+    "group_assignees": [],
+    "watchers": [
+      {
+        "id": 294794940,
+        "username": "Tr\u1ECDng Ph\u00FA l\u00EA",
+        "color": "#595d66",
+        "initials": "TL",
+        "email": "phu.lt@charm.contact",
+        "profilePicture": null
+      }
+    ],
+    "checklists": [],
+    "tags": [
+      {
+        "name": "dev",
+        "tag_fg": "#3E63DD",
+        "tag_bg": "#248f7d",
+        "creator": 294794940
+      }
+    ],
+    "parent": null,
+    "top_level_parent": null,
+    "priority": null,
+    "due_date": null,
+    "start_date": null,
+    "points": null,
+    "time_estimate": null,
+    "time_spent": 0,
+    "custom_fields": [
+      {
+        "id": "53c65b2d-ac3e-4682-990c-2e85d8d5b610",
+        "name": "Email",
+        "type": "email",
+        "type_config": {},
+        "date_created": "1761649632549",
+        "hide_from_guests": false,
+        "required": false
+      },
+      {
+        "id": "2bff4624-77bb-4901-bff9-5b03c5df8d1c",
+        "name": "Phone",
+        "type": "short_text",
+        "type_config": {},
+        "date_created": "1761650916227",
+        "hide_from_guests": false,
+        "required": false
+      }
+    ],
+    "dependencies": [],
+    "linked_tasks": [],
+    "locations": [],
+    "team_id": "90181891084",
+    "url": "https://app.clickup.com/t/86evc2re6",
+    "sharing": {
+      "public": false,
+      "public_share_expires_on": null,
+      "public_fields": [
+        "assignees",
+        "priority",
+        "due_date",
+        "content",
+        "comments",
+        "attachments",
+        "customFields",
+        "subtasks",
+        "tags",
+        "checklists",
+        "coverimage"
+      ],
+      "token": null,
+      "seo_optimized": false
+    },
+    "permission_level": "create",
+    "list": {
+      "id": "901812388988",
+      "name": "Task",
+      "access": true
+    },
+    "project": {
+      "id": "90189096210",
+      "name": "Projets",
+      "hidden": false,
+      "access": true
+    },
+    "folder": {
+      "id": "90189096210",
+      "name": "Projets",
+      "hidden": false,
+      "access": true
+    },
+    "space": {
+      "id": "90187443213"
+    },
+    "attachments": []
+  },
+  {
+    "id": "86evc2re6",
+    "custom_id": null,
+    "custom_item_id": 0,
+    "name": "t",
+    "text_content": "",
+    "description": "",
+    "status": {
+      "id": "sc901812388988_8wWaY1uT",
+      "status": "in progress",
+      "color": "#5f55ee",
+      "orderindex": 1,
+      "type": "custom"
+    },
+    "orderindex": "120485111.00000000000000000000000000000000",
+    "date_created": "1762103512959",
+    "date_updated": "1762103512959",
+    "date_closed": null,
+    "date_done": null,
+    "archived": false,
+    "creator": {
+      "id": 294794940,
+      "username": "Tr\u1ECDng Ph\u00FA l\u00EA",
+      "color": "#595d66",
+      "email": "phu.lt@charm.contact",
+      "profilePicture": null
+    },
+    "assignees": [],
+    "group_assignees": [],
+    "watchers": [
+      {
+        "id": 294794940,
+        "username": "Tr\u1ECDng Ph\u00FA l\u00EA",
+        "color": "#595d66",
+        "initials": "TL",
+        "email": "phu.lt@charm.contact",
+        "profilePicture": null
+      }
+    ],
+    "checklists": [],
+    "tags": [
+      {
+        "name": "dev",
+        "tag_fg": "#3E63DD",
+        "tag_bg": "#248f7d",
+        "creator": 294794940
+      }
+    ],
+    "parent": null,
+    "top_level_parent": null,
+    "priority": null,
+    "due_date": null,
+    "start_date": null,
+    "points": null,
+    "time_estimate": null,
+    "time_spent": 0,
+    "custom_fields": [
+      {
+        "id": "53c65b2d-ac3e-4682-990c-2e85d8d5b610",
+        "name": "Email",
+        "type": "email",
+        "type_config": {},
+        "date_created": "1761649632549",
+        "hide_from_guests": false,
+        "required": false
+      },
+      {
+        "id": "2bff4624-77bb-4901-bff9-5b03c5df8d1c",
+        "name": "Phone",
+        "type": "short_text",
+        "type_config": {},
+        "date_created": "1761650916227",
+        "hide_from_guests": false,
+        "required": false
+      }
+    ],
+    "dependencies": [],
+    "linked_tasks": [],
+    "locations": [],
+    "team_id": "90181891084",
+    "url": "https://app.clickup.com/t/86evc2re6",
+    "sharing": {
+      "public": false,
+      "public_share_expires_on": null,
+      "public_fields": [
+        "assignees",
+        "priority",
+        "due_date",
+        "content",
+        "comments",
+        "attachments",
+        "customFields",
+        "subtasks",
+        "tags",
+        "checklists",
+        "coverimage"
+      ],
+      "token": null,
+      "seo_optimized": false
+    },
+    "permission_level": "create",
+    "list": {
+      "id": "901812388988",
+      "name": "Task",
+      "access": true
+    },
+    "project": {
+      "id": "90189096210",
+      "name": "Projets",
+      "hidden": false,
+      "access": true
+    },
+    "folder": {
+      "id": "90189096210",
+      "name": "Projets",
+      "hidden": false,
+      "access": true
+    },
+    "space": {
+      "id": "90187443213"
+    },
+    "attachments": []
+  }
+]

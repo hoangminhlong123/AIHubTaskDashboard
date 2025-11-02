@@ -1,10 +1,6 @@
 {
   "Version": 1,
-<<<<<<< Updated upstream
-  "Hash": "zxvc2kwxePHg76Rgm9vmxCOWhREJiYg8oYcdhzTSt0g=",
-=======
-  "Hash": "QP+Vmh4N/yLYXQ00lSZ0cXBBPdsxDRpU10xomg24u9k=",
->>>>>>> Stashed changes
+  "Hash": "YrdBRQaKEuP/9NAVMspOL2FI6OBdQuUBm2wshThLMKg=",
   "Source": "AIHubTaskDashboard",
   "BasePath": "_content/AIHubTaskDashboard",
   "Mode": "Default",
@@ -1452,7 +1448,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 16:46:23 GMT"
+          "Value": "Sun, 02 Nov 2025 17:01:46 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1489,7 +1485,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 16:46:23 GMT"
+          "Value": "Sun, 02 Nov 2025 17:01:46 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1534,7 +1530,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 16:46:23 GMT"
+          "Value": "Sun, 02 Nov 2025 17:01:46 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1579,7 +1575,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 16:46:23 GMT"
+          "Value": "Sun, 02 Nov 2025 17:01:46 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1616,11 +1612,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1657,11 +1649,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1706,11 +1694,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1755,11 +1739,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1796,7 +1776,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 16:42:47 GMT"
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1833,7 +1813,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 16:42:47 GMT"
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1878,11 +1858,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1919,11 +1895,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -2050,11 +2022,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -2091,11 +2059,7 @@
         },
         {
           "Name": "Last-Modified",
-<<<<<<< Updated upstream
-          "Value": "Sun, 02 Nov 2025 10:18:15 GMT"
-=======
-          "Value": "Sun, 02 Nov 2025 16:54:17 GMT"
->>>>>>> Stashed changes
+          "Value": "Sun, 02 Nov 2025 17:01:19 GMT"
         },
         {
           "Name": "Cache-Control",
