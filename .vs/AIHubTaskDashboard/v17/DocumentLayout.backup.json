@@ -138,8 +138,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\Controllers\\AccountController.cs",
               "ViewState": "AgIAAHQAAAAAAAAAAAAswKUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-10T11:00:56.652Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-10T11:00:56.652Z"
             },
             {
               "$type": "Document",
@@ -187,8 +186,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\Controllers\\ClickUpWebHookController.cs",
               "ViewState": "AgIAABsCAAAAAAAAAAAcwCoCAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-28T07:45:27.869Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-28T07:45:27.869Z"
             },
             {
               "$type": "Document",
@@ -198,7 +196,7 @@
               "RelativeDocumentMoniker": "AIHubTaskDashboard\\Services\\ClickUpService.cs",
               "ToolTip": "E:\\AIHUB TASK\\DASSHBOARD\\AIHubTaskDashboard\\AIHubTaskDashboard\\Services\\ClickUpService.cs",
               "RelativeToolTip": "AIHubTaskDashboard\\Services\\ClickUpService.cs",
-              "ViewState": "AgIAAA0DAAAAAAAAAADwvzoDAAABAAAAAAAAAA==",
+              "ViewState": "AgIAABQDAAAAAAAAAAAwwCMDAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-28T07:45:57.828Z",
               "EditorCaption": ""
@@ -213,8 +211,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\Program.cs",
               "ViewState": "AgIAAHMAAAAAAAAAAAAuwMgAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-14T07:45:27.031Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-14T07:45:27.031Z"
             },
             {
               "$type": "Document",
@@ -226,8 +223,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\Services\\ClickUpApiService.cs",
               "ViewState": "AgIAAIwBAAAAAAAAAAAIwJoBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-29T05:17:45.421Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-29T05:17:45.421Z"
             },
             {
               "$type": "Document",
@@ -239,8 +235,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\Services\\ApiClientService.cs",
               "ViewState": "AgIAAEIAAAAAAAAAAAAIwFAAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-14T09:33:00.167Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-14T09:33:00.167Z"
             },
             {
               "$type": "Document",
@@ -252,8 +247,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\Controllers\\TasksController.cs",
               "ViewState": "AgIAAAQDAAAAAAAAAAAcwBMDAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-14T10:35:33.519Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-14T10:35:33.519Z"
             },
             {
               "$type": "Document",
@@ -265,8 +259,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-10-14T07:40:10.327Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-14T07:40:10.327Z"
             },
             {
               "$type": "Document",
@@ -422,8 +415,7 @@
               "RelativeToolTip": "AIHubTaskDashboard\\AIHubTaskDashboard.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-10-10T09:15:56.666Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-10T09:15:56.666Z"
             }
           ]
         }
