@@ -27,15 +27,19 @@ namespace AIHubTaskDashboard.Services
 
 			var baseUrl = config["ClickUpSettings:ApiBaseUrl"] ?? "https://api.clickup.com/api/v2/";
 			_httpClient.BaseAddress = new Uri(baseUrl);
-			_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_token);
-			_httpClient.DefaultRequestHeaders.Add("User-Agent", "AIHubTaskDashboard");
+
+			// 🔥 FIX: ClickUp yêu cầu token trực tiếp, KHÔNG có "Bearer"
+			_httpClient.DefaultRequestHeaders.Clear();
+			_httpClient.DefaultRequestHeaders.Add("Authorization", _token);
+
+			_logger.LogInformation($"🔧 [INIT] ClickUp API initialized");
+			_logger.LogInformation($"🔧 [INIT] Base URL: {baseUrl}");
+			_logger.LogInformation($"🔧 [INIT] Token: {_token.Substring(0, Math.Min(15, _token.Length))}...");
 		}
 
 		// 🔥 Get Space Tags (DEPRECATED - có thể gây lỗi Unauthorized)
 		public async Task<JsonElement> GetSpaceTagsAsync()
 		{
-			// Note: Method này có thể fail với "Team(s) not authorized"
-			// Nên dùng GetTaskTagsAsync() cho từng task thay vì load toàn bộ space tags
 			try
 			{
 				_logger.LogInformation($"🏷️ Fetching tags from Space: {_spaceId}");
@@ -45,7 +49,8 @@ namespace AIHubTaskDashboard.Services
 
 				if (!response.IsSuccessStatusCode)
 				{
-					_logger.LogDebug($"⚠️ GetSpaceTags failed: {response.StatusCode}");
+					_logger.LogWarning($"⚠️ GetSpaceTags failed: {response.StatusCode}");
+					_logger.LogDebug($"⚠️ Response: {responseContent}");
 					return JsonDocument.Parse("[]").RootElement;
 				}
 
@@ -61,7 +66,7 @@ namespace AIHubTaskDashboard.Services
 			}
 			catch (Exception ex)
 			{
-				_logger.LogDebug($"⚠️ Error fetching space tags: {ex.Message}");
+				_logger.LogError($"❌ Error fetching space tags: {ex.Message}");
 				return JsonDocument.Parse("[]").RootElement;
 			}
 		}
@@ -71,14 +76,19 @@ namespace AIHubTaskDashboard.Services
 		{
 			try
 			{
+				_logger.LogInformation($"🔍 [TAGS] Fetching tags for task: {clickupId}");
+
 				var response = await _httpClient.GetAsync($"task/{clickupId}");
 				var responseContent = await response.Content.ReadAsStringAsync();
 
 				if (!response.IsSuccessStatusCode)
 				{
 					_logger.LogWarning($"⚠️ Cannot fetch task tags for {clickupId}: {response.StatusCode}");
+					_logger.LogDebug($"⚠️ Response: {responseContent}");
 					return new List<string>();
 				}
+
+				_logger.LogDebug($"📥 [TAGS] Response for {clickupId}: {responseContent.Substring(0, Math.Min(200, responseContent.Length))}...");
 
 				var result = JsonDocument.Parse(responseContent).RootElement;
 
@@ -96,14 +106,17 @@ namespace AIHubTaskDashboard.Services
 							}
 						}
 					}
+
+					_logger.LogInformation($"✅ [TAGS] Task {clickupId} has {tags.Count} tags: {string.Join(", ", tags)}");
 					return tags;
 				}
 
+				_logger.LogInformation($"ℹ️ [TAGS] Task {clickupId} has no tags");
 				return new List<string>();
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError($"❌ Error getting task tags: {ex.Message}");
+				_logger.LogError($"❌ Error getting task tags for {clickupId}: {ex.Message}");
 				return new List<string>();
 			}
 		}
@@ -266,6 +279,10 @@ namespace AIHubTaskDashboard.Services
 							await RemoveTagFromTaskAsync(clickupId, tag);
 						}
 					}
+					else
+					{
+						_logger.LogInformation($"ℹ️ [TAGS] No tag changes needed");
+					}
 				}
 
 				var jsonPayload = JsonSerializer.Serialize(payloadDict, new JsonSerializerOptions { WriteIndented = true });
@@ -302,11 +319,9 @@ namespace AIHubTaskDashboard.Services
 			{
 				_logger.LogInformation($"🏷️ Adding tag '{tagName}' to task {clickupId}");
 
-				var payload = new { tag_name = tagName };
-				var jsonPayload = JsonSerializer.Serialize(payload);
-				var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-				var response = await _httpClient.PostAsync($"task/{clickupId}/tag/{tagName}", content);
+				// 🔥 ClickUp API: POST /task/{task_id}/tag/{tag_name}
+				// Body không cần thiết cho endpoint này
+				var response = await _httpClient.PostAsync($"task/{clickupId}/tag/{Uri.EscapeDataString(tagName)}", null);
 
 				if (response.IsSuccessStatusCode)
 				{
@@ -334,7 +349,7 @@ namespace AIHubTaskDashboard.Services
 			{
 				_logger.LogInformation($"🏷️ Removing tag '{tagName}' from task {clickupId}");
 
-				var response = await _httpClient.DeleteAsync($"task/{clickupId}/tag/{tagName}");
+				var response = await _httpClient.DeleteAsync($"task/{clickupId}/tag/{Uri.EscapeDataString(tagName)}");
 
 				if (response.IsSuccessStatusCode)
 				{

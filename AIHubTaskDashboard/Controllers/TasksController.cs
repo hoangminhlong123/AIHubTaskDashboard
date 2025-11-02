@@ -512,6 +512,7 @@ namespace AIHubTaskDashboard.Controllers
 			}
 		}
 
+		// 🔥 UPDATE your Edit GET method - SIMPLE VERSION (no color sync needed)
 		[HttpGet]
 		public async Task<IActionResult> Edit(int id)
 		{
@@ -551,7 +552,11 @@ namespace AIHubTaskDashboard.Controllers
 
 				var taskTagsDict = await SyncTaskTagsFromClickUp(tasks);
 				var allTags = CollectAllTagsFromTasks(taskTagsDict);
+
 				ViewBag.Tags = allTags.OrderBy(t => t).ToList();
+				ViewBag.TaskTags = taskTagsDict; // 🔥 Pass task tags dictionary to show current tags
+
+				_logger.LogInformation($"✅ [EDIT] Loaded {allTags.Count} unique tags");
 
 				return View(task);
 			}
@@ -695,5 +700,6 @@ namespace AIHubTaskDashboard.Controllers
 				return RedirectToAction("Index");
 			}
 		}
+
 	}
 }

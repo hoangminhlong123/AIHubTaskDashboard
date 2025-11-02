@@ -123,6 +123,69 @@
 }
 
 <link rel="stylesheet" href="~/css/tasks-luxury.css">
+
+<!-- SweetAlert2 CDN -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Custom SweetAlert2 styles -->
+<style>
+    .swal2-popup {
+        border-radius: 20px !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .swal2-title {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: var(--tk-navy, #1e293b) !important;
+    }
+
+    .swal2-html-container {
+        font-size: 1rem !important;
+        color: #64748b !important;
+    }
+
+    .swal2-confirm {
+        background: linear-gradient(135deg, #dc2626, #991b1b) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .swal2-confirm:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4) !important;
+        }
+
+    .swal2-cancel {
+        background: #f1f5f9 !important;
+        color: #64748b !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .swal2-cancel:hover {
+            background: #e2e8f0 !important;
+            transform: translateY(-2px) !important;
+        }
+
+    .swal2-icon {
+        border-width: 3px !important;
+    }
+
+        .swal2-icon.swal2-warning {
+            border-color: #f59e0b !important;
+            color: #f59e0b !important;
+        }
+</style>
 @* <link href="~/css/index-list.css" rel="stylesheet" />
  *@
 <h2 class="tk-page-title tk-fw-bold tk-mb-4">@ViewBag.Title</h2>
