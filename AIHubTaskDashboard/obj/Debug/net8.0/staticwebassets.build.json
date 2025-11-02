@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "6x5xPJ+1QaLAuPXhxfltXir+Tt2Zy7sbFCWu/Xzajxg=",
+  "Hash": "YCkjSejx3ApkIrrlU2t3ux3sQymBQ2PCRRl6204hqqA=",
   "Source": "AIHubTaskDashboard",
   "BasePath": "_content/AIHubTaskDashboard",
   "Mode": "Default",
@@ -1776,7 +1776,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 10:37:59 GMT"
+          "Value": "Sun, 02 Nov 2025 12:19:11 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1813,7 +1813,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 02 Nov 2025 10:37:59 GMT"
+          "Value": "Sun, 02 Nov 2025 12:19:11 GMT"
         },
         {
           "Name": "Cache-Control",
