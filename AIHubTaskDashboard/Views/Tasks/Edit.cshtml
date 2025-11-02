@@ -6,17 +6,8 @@
     var usersJson = ViewBag.Users as JsonElement? ?? JsonDocument.Parse("[]").RootElement;
     var users = usersJson.ValueKind == JsonValueKind.Array ? usersJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
 
-    // Load tags
-    JsonElement tagsJson;
-    if (ViewBag.Tags is JsonElement tagsElement)
-    {
-        tagsJson = tagsElement;
-    }
-    else
-    {
-        tagsJson = JsonDocument.Parse("[]").RootElement;
-    }
-    var tags = tagsJson.ValueKind == JsonValueKind.Array ? tagsJson.EnumerateArray() : Enumerable.Empty<JsonElement>();
+    // Load available tags
+    var availableTagsList = ViewBag.Tags as List<string> ?? new List<string>();
 
     // Extract task data
     int taskId = Model.TryGetProperty("task_id", out var id) ? id.GetInt32() : 0;
@@ -28,29 +19,140 @@
     int currentAssigneeId = Model.TryGetProperty("assignee_id", out var aid) ? aid.GetInt32() : 0;
     int assignerId = Model.TryGetProperty("assigner_id", out var aoid) ? aoid.GetInt32() : 0;
 
-    // Extract current tags
+    // 🔥 Get current tags from TaskTags dictionary
     var currentTags = new List<string>();
-    if (Model.TryGetProperty("tags", out var tagsProperty) && tagsProperty.ValueKind == JsonValueKind.Array)
+    var taskTagsDict = ViewBag.TaskTags as Dictionary<string, List<string>> ?? new Dictionary<string, List<string>>();
+
+    if (!string.IsNullOrEmpty(clickupId) && taskTagsDict.ContainsKey(clickupId))
     {
-        foreach (var tag in tagsProperty.EnumerateArray())
+        currentTags = taskTagsDict[clickupId];
+    }
+
+    // Get assigner name
+    string assignerName = "Unknown User";
+    foreach (var user in users)
+    {
+        var userId = user.TryGetProperty("id", out var uid) ? uid.GetInt32() : 0;
+        if (userId == assignerId)
         {
-            var tagName = tag.TryGetProperty("name", out var tn) ? tn.GetString() : "";
-            if (!string.IsNullOrEmpty(tagName))
-            {
-                currentTags.Add(tagName);
-            }
+            assignerName = user.TryGetProperty("name", out var fn) ? fn.GetString() : $"User #{assignerId}";
+            break;
         }
     }
 }
 
 <link rel="stylesheet" href="~/css/tasks-luxury.css">
+<!-- 🔥 Add SweetAlert2 -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    /* 🔥 Current Tags Display Section */
+    .tk-current-tags-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tk-current-tags-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--tk-navy, #1e293b);
+        margin-bottom: 1rem;
+    }
+
+    .tk-current-tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tk-current-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+    }
+
+        .tk-current-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+    .tk-no-tags {
+        color: #94a3b8;
+        font-style: italic;
+        padding: 0.5rem 0;
+    }
+
+    .tk-info-note {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: #fef3c7;
+        border-left: 3px solid #f59e0b;
+        border-radius: 8px;
+        color: #92400e;
+        font-size: 0.875rem;
+    }
+</style>
 
 <h2 class="tk-page-title tk-fw-bold tk-mb-4">Chỉnh sửa Task #@taskId</h2>
 
+<!-- 🔥 Hiển thị người giao -->
 <div class="tk-card tk-mb-4">
     <div class="tk-card-body" style="padding: 1rem 1.75rem;">
-        <p style="margin: 0; color: #64748b;">Người tạo: <span class="tk-fw-semibold" style="color: var(--tk-navy);">#@assignerId</span></p>
+        <p style="margin: 0; color: #64748b;">
+            <i class="bi bi-person-fill" style="color: var(--tk-gold); margin-right: 0.5rem;"></i>
+            Người giao: <span class="tk-fw-semibold" style="color: var(--tk-navy);">@assignerName (#@assignerId)</span>
+        </p>
     </div>
+</div>
+
+<!-- 🔥 NEW: Hiển thị Tags hiện tại của Task -->
+<div class="tk-current-tags-section">
+    <div class="tk-current-tags-title">
+        <i class="bi bi-tags-fill" style="color: var(--tk-gold);"></i>
+        Tags hiện tại của Task:
+    </div>
+
+    @if (currentTags.Count > 0)
+    {
+        <div class="tk-current-tags-list">
+            @foreach (var tag in currentTags)
+            {
+                <span class="tk-current-tag">
+                    <i class="bi bi-tag-fill"></i>
+                    @tag
+                </span>
+            }
+        </div>
+        <div class="tk-info-note">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Bạn có thể thêm hoặc xóa tags ở phần <strong>"Chỉnh sửa Tags"</strong> bên dưới</span>
+        </div>
+    }
+    else
+    {
+        <p class="tk-no-tags">
+            <i class="bi bi-inbox"></i>
+            Task này chưa có tag nào. Bạn có thể thêm tags ở phần bên dưới.
+        </p>
+    }
 </div>
 
 <div class="tk-card tk-mb-4">
@@ -103,22 +205,26 @@
                 <input type="number" id="progressInput" name="progress_percentage" class="tk-input" min="0" max="100" value="@progress" required />
             </div>
 
-            <!-- 🔥 NEW: Tags Selection -->
+            <!-- 🔥 Tags Selection Editor -->
             <div class="tk-form-col-12">
                 <label class="tk-form-label">
-                    <i class="bi bi-tags-fill"></i>Tags
+                    <i class="bi bi-pencil-fill"></i> Chỉnh sửa Tags
                 </label>
                 <div id="tagsContainer" class="tk-tags-container">
                     <div id="selectedTags" class="tk-tags-selected"></div>
                     <input type="text"
                            id="tagSearchInput"
                            class="tk-tags-input"
-                           placeholder="Tìm hoặc tạo tag mới..."
+                           placeholder="Tìm tag có sẵn hoặc nhập tên mới để tạo..."
                            autocomplete="off" />
                     <div id="tagSuggestions" class="tk-tags-suggestions"></div>
                 </div>
                 <input type="hidden" id="tagsInput" name="tags" value="" />
-                <small class="tk-text-muted">Click để chọn tag có sẵn hoặc nhập tên mới để tạo tag</small>
+                <small class="tk-text-muted">
+                    <i class="bi bi-lightbulb"></i>
+                    Click để chọn tag có sẵn, hoặc gõ tên mới và nhấn <strong>Enter</strong> để tạo tag mới.
+                    Click dấu <strong>×</strong> để xóa tag.
+                </small>
             </div>
 
             <div class="tk-form-col-12" style="margin-top: 2rem;">
@@ -126,7 +232,7 @@
                     <i class="bi bi-save"></i> Lưu Thay đổi
                 </button>
                 <a href="@Url.Action("Index", "Tasks")" class="tk-btn tk-btn-outline-secondary tk-btn-lg">
-                    Quay lại
+                    <i class="bi bi-arrow-left"></i> Quay lại
                 </a>
             </div>
         </form>
@@ -136,15 +242,12 @@
 
 @section Scripts {
     <script>
-        // 🔥 Tags Management
+        // 🔥 Tags Management - Simple version (no color sync needed)
         (function() {
-            const availableTags = @Html.Raw(Json.Serialize(tags.Select(t => new
-            {
-                name = t.TryGetProperty("name", out var n) ? n.GetString() : "",
-                bg_color = t.TryGetProperty("tag_bg", out var bg) ? bg.GetString() : "#808080",
-                fg_color = t.TryGetProperty("tag_fg", out var fg) ? fg.GetString() : "#FFFFFF"
-            })));
+            // Available tags (all tags from system)
+            const availableTags = @Html.Raw(Json.Serialize(availableTagsList.Select(t => new { name = t })));
 
+            // Current tags of this task
             const currentTags = @Html.Raw(Json.Serialize(currentTags));
             const selectedTags = new Set(currentTags);
 
@@ -153,29 +256,33 @@
             const tagSuggestions = document.getElementById('tagSuggestions');
             const tagsInput = document.getElementById('tagsInput');
 
-            // Render selected tags
+            console.log('📊 Available tags:', availableTags);
+            console.log('🏷️ Current tags:', currentTags);
+
+            // Render selected tags in editor
             function renderSelectedTags() {
                 selectedTagsContainer.innerHTML = '';
-                selectedTags.forEach(tagName => {
-                    const tag = availableTags.find(t => t.name === tagName) || {
-                        name: tagName,
-                        bg_color: '#6c757d',
-                        fg_color: '#ffffff'
-                    };
 
+                if (selectedTags.size === 0) {
+                    selectedTagsContainer.innerHTML = '<small class="tk-text-muted"><i class="bi bi-info-circle"></i> Chưa có tag nào được chọn</small>';
+                    updateHiddenInput();
+                    return;
+                }
+
+                selectedTags.forEach(tagName => {
                     const tagElement = document.createElement('span');
                     tagElement.className = 'tk-tag-item';
-                    tagElement.style.backgroundColor = tag.bg_color;
-                    tagElement.style.color = tag.fg_color;
+                    tagElement.style.backgroundColor = '#3b82f6';
+                    tagElement.style.color = '#ffffff';
                     tagElement.innerHTML = `
-                        ${tag.name}
+                        <i class="bi bi-tag-fill"></i>
+                        ${tagName}
                         <button type="button" class="tk-tag-remove" aria-label="Remove">&times;</button>
                     `;
 
                     tagElement.querySelector('.tk-tag-remove').addEventListener('click', () => {
                         selectedTags.delete(tagName);
                         renderSelectedTags();
-                        updateHiddenInput();
                     });
 
                     selectedTagsContainer.appendChild(tagElement);
@@ -183,12 +290,13 @@
                 updateHiddenInput();
             }
 
-            // Update hidden input
+            // Update hidden input for form submission
             function updateHiddenInput() {
                 tagsInput.value = Array.from(selectedTags).join(',');
+                console.log('✅ Updated tags:', tagsInput.value);
             }
 
-            // Show suggestions
+            // Show tag suggestions
             function showSuggestions(searchTerm) {
                 const filtered = availableTags.filter(tag =>
                     tag.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -199,7 +307,7 @@
                     tagSuggestions.innerHTML = `
                         <div class="tk-suggestions-list">
                             <button type="button" class="tk-suggestion-item" data-create-tag="${searchTerm}">
-                                <i class="bi bi-plus-circle"></i>Tạo tag mới: <strong>"${searchTerm}"</strong>
+                                <i class="bi bi-plus-circle"></i> Tạo tag mới: <strong>"${searchTerm}"</strong>
                             </button>
                         </div>
                     `;
@@ -207,7 +315,9 @@
                     tagSuggestions.innerHTML = '<div class="tk-suggestions-list">' +
                         filtered.map(tag => `
                             <button type="button" class="tk-suggestion-item" data-tag-name="${tag.name}">
-                                <span class="tk-suggestion-badge" style="background-color: ${tag.bg_color}; color: ${tag.fg_color};">${tag.name}</span>
+                                <span class="tk-suggestion-badge">
+                                    <i class="bi bi-tag-fill"></i> ${tag.name}
+                                </span>
                             </button>
                         `).join('') +
                         '</div>';
@@ -240,6 +350,7 @@
                 }
             });
 
+            // Click handlers
             document.addEventListener('click', (e) => {
                 if (e.target.closest('[data-tag-name]')) {
                     const tagName = e.target.closest('[data-tag-name]').dataset.tagName;
@@ -258,7 +369,8 @@
                 }
             });
 
-            // Initialize with current tags
+            // 🔥 Initialize with current tags
+            console.log('🎨 Initializing tags editor...');
             renderSelectedTags();
         })();
     </script>
