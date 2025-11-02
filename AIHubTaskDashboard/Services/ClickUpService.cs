@@ -801,7 +801,7 @@ namespace AIHubTaskDashboard.Services
 			_logger.LogDebug($"📈 [MAP] Progress calculation: '{status}' → {progress}%");
 			return progress;
 		}
-
+		 
 		private string ParseClickUpDate(string? dueDate)
 		{
 			if (string.IsNullOrEmpty(dueDate))
