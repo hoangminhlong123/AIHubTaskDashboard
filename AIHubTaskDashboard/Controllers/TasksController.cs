@@ -631,8 +631,8 @@ namespace AIHubTaskDashboard.Controllers
 				{
 					title = title.Trim(),
 					description = description?.Trim() ?? "",
-					status,
-					progress_percentage,
+                    status = status.ToLower(),
+                    progress_percentage,
 					assignee_id = assignee_id ?? 0
 				};
 

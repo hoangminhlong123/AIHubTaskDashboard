@@ -395,17 +395,18 @@ namespace AIHubTaskDashboard.Services
 			}
 		}
 
-		private string MapDashboardStatusToClickUp(string dashboardStatus)
-		{
-			return dashboardStatus?.ToLower() switch
-			{
-				"to do" => "to do",
-				"pending" => "to do",
-				"in progress" => "in progress",
-				"completed" => "complete",
-				"done" => "complete",
-				_ => "to do"
-			};
-		}
-	}
+        private string MapDashboardStatusToClickUp(string dashboardStatus)
+        {
+            return dashboardStatus?.ToLower() switch
+            {
+                "to do" => "To Do",
+                "pending" => "To Do",
+                "in progress" => "In Progress",
+                "completed" => "Completed",
+                "done" => "Completed",
+                _ => "To Do"
+            };
+        }
+
+    }
 }
