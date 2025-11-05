@@ -364,8 +364,8 @@ namespace AIHubTaskDashboard.Controllers
 		{
 			try
 			{
-				_logger.LogInformation("🔄 [CREATE] Loading Create page...");
-				ViewBag.Users = await GetUsersFromLocalApi();
+                _logger.LogInformation($"[CREATE] ViewBag.Users type: {ViewBag.Users?.GetType().FullName}");
+                ViewBag.Users = await GetUsersFromLocalApi();
 
 				// 🔥 Get tags from existing tasks instead of Space API
 				var tasksRes = await _api.GetAsync("api/v1/tasks");
