@@ -430,8 +430,15 @@ else
                         var title = task.TryGetProperty("title", out var titleElement) ? titleElement.GetString() : "(Không có tiêu đề)";
                         var status = task.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "To Do";
                         var progress = task.TryGetProperty("progress_percentage", out var progressElement) ? progressElement.GetInt32() : 0;
-                        var assignerId = task.TryGetProperty("assigner_id", out var assignerIdElement) ? assignerIdElement.GetInt32() : 0;
-                        var assigneeId = task.TryGetProperty("assignee_id", out var assigneeIdElement) ? assigneeIdElement.GetInt32() : 0;
+                        var assignerId = task.TryGetProperty("assigner_id", out var assignerIdElement)
+                        && assignerIdElement.ValueKind == JsonValueKind.Number
+                        ? assignerIdElement.GetInt32()
+                        : 0;
+
+                        var assigneeId = task.TryGetProperty("assignee_id", out var assigneeIdElement)
+                        && assigneeIdElement.ValueKind == JsonValueKind.Number
+                        ? assigneeIdElement.GetInt32()
+                        : 0;
                         var clickupId = task.TryGetProperty("clickup_id", out var clickupIdElement) ? clickupIdElement.GetString() : "";
                         var deadlineStr = task.TryGetProperty("deadline", out var deadlineElement) ? deadlineElement.GetString() : "";
 
