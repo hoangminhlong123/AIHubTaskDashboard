@@ -54,7 +54,6 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// 🔥 Enable detailed logging for debugging
 builder.Logging.AddFilter("AIHubTaskDashboard.Services", LogLevel.Information);
 builder.Logging.AddFilter("AIHubTaskDashboard.Controllers", LogLevel.Information);
 builder.Logging.AddFilter("AIHUBOS.Dashboard.Services", LogLevel.Information);

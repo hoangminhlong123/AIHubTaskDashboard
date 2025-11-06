@@ -1,6 +1,5 @@
 ﻿using AIHubTaskDashboard.Services;
 using Microsoft.AspNetCore.Mvc;
-﻿using Microsoft.AspNetCore.Mvc;
 using AIHubTaskDashboard.ViewModel;
 using System.Text.Json;
 
@@ -17,6 +16,41 @@ namespace AIHubTaskDashboard.Controllers
 			_logger = logger;
 		}
 
+		private async Task<JsonElement> GetUsersFromLocalApi()
+		{
+			try
+			{
+				_logger.LogInformation("🔄 [DASHBOARD-USERS] Fetching from LOCAL UsersController...");
+
+				using var httpClient = new HttpClient();
+				var request = HttpContext.Request;
+				var baseUrl = $"{request.Scheme}://{request.Host}/";
+
+				httpClient.BaseAddress = new Uri(baseUrl);
+				httpClient.Timeout = TimeSpan.FromSeconds(15);
+
+				var response = await httpClient.GetAsync("api/v1/users");
+				var usersRes = await response.Content.ReadAsStringAsync();
+
+				if (response.IsSuccessStatusCode && !string.IsNullOrEmpty(usersRes))
+				{
+					var users = JsonDocument.Parse(usersRes).RootElement;
+
+					if (users.ValueKind == JsonValueKind.Array)
+					{
+						_logger.LogInformation($"✅ [DASHBOARD-USERS] Got {users.GetArrayLength()} users from LOCAL API");
+						return users;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"❌ [DASHBOARD-USERS] Exception: {ex.Message}");
+			}
+
+			return JsonDocument.Parse("[]").RootElement;
+		}
+
 		public async Task<IActionResult> Index()
 		{
 			try
@@ -30,61 +64,70 @@ namespace AIHubTaskDashboard.Controllers
 
 				_logger.LogInformation("🏠 [DASHBOARD] Loading dashboard...");
 
-				// Fetch all tasks
-				var tasksRes = await _api.GetAsync("api/v1/tasks");
-				JsonElement tasks;
+				// 🔥 Fetch tasks from API (GIỐNG TASKSCONTROLLER)
+				string endpoint = "api/v1/tasks";
+				_logger.LogInformation($"🔍 [DASHBOARD] Fetching tasks from: {endpoint}");
 
-				if (string.IsNullOrWhiteSpace(tasksRes))
+				var res = await _api.GetAsync(endpoint);
+
+				JsonElement tasks;
+				if (string.IsNullOrWhiteSpace(res))
 				{
+					_logger.LogWarning("⚠️ [DASHBOARD] API returned empty response");
 					tasks = JsonDocument.Parse("[]").RootElement;
 				}
 				else
 				{
-					tasks = JsonDocument.Parse(tasksRes).RootElement;
-					if (tasks.ValueKind != JsonValueKind.Array)
+					try
 					{
-						tasks = JsonDocument.Parse($"[{tasksRes}]").RootElement;
+						_logger.LogInformation($"📥 [DASHBOARD] Raw response length: {res.Length} chars");
+
+						// 🔥 FIX: Parse và kiểm tra định dạng giống TasksController
+						var parsedJson = JsonDocument.Parse(res);
+						tasks = parsedJson.RootElement;
+
+						// 🔥 Nếu không phải array, wrap nó trong array
+						if (tasks.ValueKind != JsonValueKind.Array)
+						{
+							_logger.LogWarning($"⚠️ [DASHBOARD] Response is not array, wrapping it. ValueKind: {tasks.ValueKind}");
+							tasks = JsonDocument.Parse($"[{res}]").RootElement;
+						}
+
+						_logger.LogInformation($"✅ [DASHBOARD] Parsed {tasks.GetArrayLength()} tasks");
+					}
+					catch (JsonException jsonEx)
+					{
+						_logger.LogError($"❌ [DASHBOARD] JSON parse error: {jsonEx.Message}");
+						_logger.LogError($"📥 [DASHBOARD] Invalid JSON (first 500 chars): {res.Substring(0, Math.Min(500, res.Length))}");
+						tasks = JsonDocument.Parse("[]").RootElement;
 					}
 				}
 
-				_logger.LogInformation($"✅ [DASHBOARD] Loaded {tasks.GetArrayLength()} tasks");
-
-				// Fetch users
-				JsonElement users;
-				try
+				// 🔥 DEBUG: Log task structure
+				if (tasks.GetArrayLength() > 0)
 				{
-					using var httpClient = new HttpClient();
-					var request = HttpContext.Request;
-					var baseUrl = $"{request.Scheme}://{request.Host}/";
-					httpClient.BaseAddress = new Uri(baseUrl);
-					httpClient.Timeout = TimeSpan.FromSeconds(15);
+					var firstTask = tasks.EnumerateArray().First();
+					_logger.LogInformation($"🔍 [DASHBOARD] First task structure:");
+					_logger.LogInformation($"   Raw JSON: {JsonSerializer.Serialize(firstTask, new JsonSerializerOptions { WriteIndented = false })}");
 
-					var response = await httpClient.GetAsync("api/v1/users");
-					var usersRes = await response.Content.ReadAsStringAsync();
-
-					if (response.IsSuccessStatusCode && !string.IsNullOrEmpty(usersRes))
+					// Log all properties
+					foreach (var prop in firstTask.EnumerateObject())
 					{
-						users = JsonDocument.Parse(usersRes).RootElement;
-						_logger.LogInformation($"✅ [DASHBOARD] Loaded {users.GetArrayLength()} users");
-					}
-					else
-					{
-						users = JsonDocument.Parse("[]").RootElement;
+						_logger.LogInformation($"   Property: {prop.Name} = {prop.Value}");
 					}
 				}
-				catch (Exception ex)
-				{
-					_logger.LogError($"❌ [DASHBOARD] Error loading users: {ex.Message}");
-					users = JsonDocument.Parse("[]").RootElement;
-				}
+
+				// 🔥 Fetch users (GIỐNG TASKSCONTROLLER)
+				var users = await GetUsersFromLocalApi();
 
 				// Calculate KPIs
 				var dashboardData = CalculateDashboardKPIs(tasks, users);
 
 				_logger.LogInformation($"📊 [DASHBOARD] KPI Summary:");
 				_logger.LogInformation($"   - Total Tasks: {dashboardData.TotalTasks}");
-				_logger.LogInformation($"   - Completed: {dashboardData.CompletedTasks} ({dashboardData.CompletionRate}%)");
+				_logger.LogInformation($"   - Pending: {dashboardData.PendingTasks}");
 				_logger.LogInformation($"   - In Progress: {dashboardData.InProgressTasks}");
+				_logger.LogInformation($"   - Completed: {dashboardData.CompletedTasks} ({dashboardData.CompletionRate}%)");
 				_logger.LogInformation($"   - Overdue: {dashboardData.OverdueTasks}");
 				_logger.LogInformation($"   - Average Progress: {dashboardData.AverageProgress}%");
 				_logger.LogInformation($"   - Team Members: {dashboardData.TasksByAssignee.Count}");
@@ -94,7 +137,14 @@ namespace AIHubTaskDashboard.Controllers
 			catch (Exception ex)
 			{
 				_logger.LogError($"❌ [DASHBOARD] Fatal error: {ex.Message}");
+				_logger.LogError($"❌ [DASHBOARD] Exception type: {ex.GetType().Name}");
 				_logger.LogError($"❌ [DASHBOARD] StackTrace: {ex.StackTrace}");
+
+				if (ex.InnerException != null)
+				{
+					_logger.LogError($"❌ [DASHBOARD] Inner exception: {ex.InnerException.Message}");
+				}
+
 				ViewBag.Error = "Không thể tải dữ liệu dashboard.";
 				return View(new DashboardViewModel());
 			}
@@ -106,7 +156,7 @@ namespace AIHubTaskDashboard.Controllers
 
 			if (tasks.ValueKind != JsonValueKind.Array)
 			{
-				_logger.LogWarning("⚠️ [DASHBOARD] Tasks is not an array");
+				_logger.LogWarning($"⚠️ [DASHBOARD-KPI] Tasks is not an array, ValueKind: {tasks.ValueKind}");
 				return model;
 			}
 
@@ -115,9 +165,11 @@ namespace AIHubTaskDashboard.Controllers
 
 			if (model.TotalTasks == 0)
 			{
-				_logger.LogInformation("ℹ️ [DASHBOARD] No tasks found");
+				_logger.LogInformation("ℹ️ [DASHBOARD-KPI] No tasks found");
 				return model;
 			}
+
+			_logger.LogInformation($"📊 [DASHBOARD-KPI] Processing {model.TotalTasks} tasks...");
 
 			// Create user mapping for quick lookup
 			var userMap = new Dictionary<int, string>();
@@ -138,46 +190,74 @@ namespace AIHubTaskDashboard.Controllers
 						}
 					}
 				}
-				_logger.LogInformation($"📋 [DASHBOARD] Mapped {userMap.Count} users");
+				_logger.LogInformation($"📋 [DASHBOARD-KPI] Mapped {userMap.Count} users");
 			}
 
 			// Process each task
+			var taskCounter = 0;
 			foreach (var task in tasks.EnumerateArray())
 			{
+				taskCounter++;
 				var taskId = task.TryGetProperty("task_id", out var tid) ? tid.GetInt32() : 0;
 
-				// Get task status
+				// 🔥 Get task status - CASE INSENSITIVE với nhiều variations
 				var status = "";
 				if (task.TryGetProperty("status", out var statusProp))
 				{
-					status = statusProp.GetString()?.ToLower() ?? "";
+					var rawStatus = statusProp.GetString();
+					status = rawStatus?.ToLower()?.Trim().Replace(" ", "").Replace("_", "") ?? "";
+
+					// Debug first 5 tasks
+					if (taskCounter <= 5)
+					{
+						_logger.LogInformation($"🔍 [DASHBOARD-KPI] Task #{taskCounter}: ID={taskId}, Status raw='{rawStatus}', normalized='{status}'");
+					}
+				}
+				else
+				{
+					_logger.LogWarning($"⚠️ [DASHBOARD-KPI] Task {taskId} has no 'status' property");
 				}
 
-				// Count by status
-				switch (status)
+				// 🔥 Count by status - NORMALIZED (no spaces, no underscores)
+				if (status == "todo" || status == "pending" || status == "notstarted")
 				{
-					case "to do":
-					case "pending":
-						model.PendingTasks++;
-						break;
-					case "in progress":
-						model.InProgressTasks++;
-						break;
-					case "completed":
-					case "done":
-						model.CompletedTasks++;
-						break;
+					model.PendingTasks++;
+				}
+				else if (status == "inprogress" || status == "ongoing" || status == "active")
+				{
+					model.InProgressTasks++;
+				}
+				else if (status == "completed" || status == "done" || status == "complete" || status == "finished")
+				{
+					model.CompletedTasks++;
+				}
+				else if (!string.IsNullOrEmpty(status))
+				{
+					// Log unknown status for debugging
+					_logger.LogWarning($"⚠️ [DASHBOARD-KPI] Unknown status: '{status}' (raw: {task.GetProperty("status").GetString()}) for task {taskId}");
 				}
 
 				// Calculate total progress for average
 				if (task.TryGetProperty("progress_percentage", out var progress))
 				{
-					model.TotalProgress += progress.GetInt32();
+					try
+					{
+						var progressValue = progress.ValueKind == JsonValueKind.Number
+							? progress.GetInt32()
+							: 0;
+						model.TotalProgress += progressValue;
+					}
+					catch (Exception ex)
+					{
+						_logger.LogWarning($"⚠️ [DASHBOARD-KPI] Error parsing progress for task {taskId}: {ex.Message}");
+					}
 				}
 
 				// Check if task is overdue
 				var isOverdue = false;
-				if (task.TryGetProperty("deadline", out var deadlineProp) && status != "completed" && status != "done")
+				var isCompletedStatus = status == "completed" || status == "done" || status == "complete" || status == "finished";
+
+				if (task.TryGetProperty("deadline", out var deadlineProp) && !isCompletedStatus)
 				{
 					try
 					{
@@ -193,64 +273,73 @@ namespace AIHubTaskDashboard.Controllers
 					}
 					catch (Exception ex)
 					{
-						_logger.LogWarning($"⚠️ [DASHBOARD] Error parsing deadline for task {taskId}: {ex.Message}");
+						_logger.LogWarning($"⚠️ [DASHBOARD-KPI] Error parsing deadline for task {taskId}: {ex.Message}");
 					}
 				}
 
 				// Track tasks by assignee (người được giao)
 				if (task.TryGetProperty("assignee_id", out var assigneeIdProp))
 				{
-					var assigneeId = assigneeIdProp.GetInt32();
-
-					if (assigneeId > 0)
+					try
 					{
-						// Initialize assignee stats if not exists
-						if (!model.TasksByAssignee.ContainsKey(assigneeId))
-						{
-							var assigneeName = userMap.ContainsKey(assigneeId)
-								? userMap[assigneeId]
-								: $"User #{assigneeId}";
+						var assigneeId = assigneeIdProp.GetInt32();
 
-							model.TasksByAssignee[assigneeId] = new AssigneeTaskStats
+						if (assigneeId > 0)
+						{
+							// Initialize assignee stats if not exists
+							if (!model.TasksByAssignee.ContainsKey(assigneeId))
 							{
-								AssigneeId = assigneeId,
-								AssigneeName = assigneeName
-							};
-						}
+								var assigneeName = userMap.ContainsKey(assigneeId)
+									? userMap[assigneeId]
+									: $"User #{assigneeId}";
 
-						var stats = model.TasksByAssignee[assigneeId];
-						stats.TotalTasks++;
+								model.TasksByAssignee[assigneeId] = new AssigneeTaskStats
+								{
+									AssigneeId = assigneeId,
+									AssigneeName = assigneeName
+								};
+							}
 
-						// Count by status for each assignee
-						switch (status)
-						{
-							case "to do":
-							case "pending":
+							var stats = model.TasksByAssignee[assigneeId];
+							stats.TotalTasks++;
+
+							// Count by status for each assignee - NORMALIZED
+							if (status == "todo" || status == "pending" || status == "notstarted")
+							{
 								stats.PendingTasks++;
-								break;
-							case "in progress":
+							}
+							else if (status == "inprogress" || status == "ongoing" || status == "active")
+							{
 								stats.InProgressTasks++;
-								break;
-							case "completed":
-							case "done":
+							}
+							else if (status == "completed" || status == "done" || status == "complete" || status == "finished")
+							{
 								stats.CompletedTasks++;
-								break;
-						}
+							}
 
-						// Count overdue tasks for assignee
-						if (isOverdue)
-						{
-							stats.OverdueTasks++;
-						}
+							// Count overdue tasks for assignee
+							if (isOverdue)
+							{
+								stats.OverdueTasks++;
+							}
 
-						// Add progress for average calculation
-						if (task.TryGetProperty("progress_percentage", out var assigneeProgress))
-						{
-							stats.TotalProgress += assigneeProgress.GetInt32();
+							// Add progress for average calculation
+							if (task.TryGetProperty("progress_percentage", out var assigneeProgress))
+							{
+								stats.TotalProgress += assigneeProgress.ValueKind == JsonValueKind.Number
+									? assigneeProgress.GetInt32()
+									: 0;
+							}
 						}
+					}
+					catch (Exception ex)
+					{
+						_logger.LogWarning($"⚠️ [DASHBOARD-KPI] Error processing assignee for task {taskId}: {ex.Message}");
 					}
 				}
 			}
+
+			_logger.LogInformation($"📊 [DASHBOARD-KPI] Status breakdown: Pending={model.PendingTasks}, InProgress={model.InProgressTasks}, Completed={model.CompletedTasks}, Overdue={model.OverdueTasks}");
 
 			// Calculate average progress
 			if (model.TotalTasks > 0)
@@ -303,7 +392,7 @@ namespace AIHubTaskDashboard.Controllers
 				.Take(3)
 				.ToList();
 
-			_logger.LogInformation($"🏆 [DASHBOARD] Top Performers:");
+			_logger.LogInformation($"🏆 [DASHBOARD-KPI] Top Performers:");
 			foreach (var performer in model.TopPerformers)
 			{
 				_logger.LogInformation($"   - {performer.AssigneeName}: {performer.CompletedTasks}/{performer.TotalTasks} ({performer.CompletionRate}%)");
